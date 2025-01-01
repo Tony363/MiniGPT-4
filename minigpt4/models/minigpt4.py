@@ -116,7 +116,7 @@ class MiniGPT4(MiniGPTBase):
         return Qformer, query_tokens
 
     def encode_img(self, image):
-        device = image.device
+        device = image[0].device
 
         if len(image.shape) > 4:
             image = image.reshape(-1, *image.shape[-3:])

@@ -18,7 +18,7 @@ from minigpt4.datasets.datasets.aok_vqa_datasets import AOKVQADataset
 from minigpt4.datasets.datasets.coco_vqa_datasets import COCOVQADataset
 from minigpt4.datasets.datasets.ocrvqa_dataset import OCRVQADataset
 from minigpt4.datasets.datasets.coco_caption import COCOCapDataset
-
+from minigpt4.datasets.datasets.daisee_dataset import DaiseeDataset
 
 @registry.register_builder("multitask_conversation")
 class MultitaskConversationBuilder(BaseDatasetBuilder):
@@ -530,6 +530,39 @@ class CCSBUAlignBuilder(BaseDatasetBuilder):
             text_processor=self.text_processors["train"],
             ann_paths=[os.path.join(storage_path, 'filter_cap.json')],
             vis_root=os.path.join(storage_path, 'image'),
+        )
+
+        return datasets
+
+@registry.register_builder("daisee")
+class DaiseeBuilder(BaseDatasetBuilder):
+    train_dataset_cls = DaiseeDataset
+
+    DATASET_CONFIG_DICT = {
+        "default": "configs/datasets/daisee/align.yaml",
+    }
+
+    def build_datasets(self):
+        # at this point, all the annotations and image/videos should be all downloaded to the specified locations.
+        logging.info("Building datasets...")
+        self.build_processors()
+
+        build_info = self.config.build_info
+        storage_path = build_info.storage
+
+        datasets = dict()
+
+        if not os.path.exists(storage_path):
+            warnings.warn("storage path {} does not exist.".format(storage_path))
+
+        # create datasets
+        dataset_cls = self.train_dataset_cls
+        datasets['train'] = dataset_cls(
+            vis_processor=self.vis_processors["train"],
+            text_processor=self.text_processors["train"],
+            ann_paths=build_info.ann_paths,
+            vis_root=build_info.vis_root,
+            instruct_prompts=build_info.prompts
         )
 
         return datasets
