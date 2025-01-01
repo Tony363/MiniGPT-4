@@ -47,7 +47,7 @@ class DaiseeDataset(BaseDataset,__DisplMixin):
         ann = self.annotation[index]
         subject = ann['video_id'][:6]
         instruction,images = random.choice(self.instruction_pool),[]
-        instruction += f"### Input:\nImage Description: {ann['caption']}\n" 
+        instruction += f"\n### Input:\nImage Description: {ann['caption']}\n" 
         print("WTF")
         print(os.path.join(self.vis_root,subject,f"{ann['video_id']}-*.jpg"))
         for image_path in sorted(glob.glob(os.path.join(self.vis_root,subject,f"{ann['video_id']}-*.jpg"))):
