@@ -108,11 +108,14 @@ class MiniGPTBase(BaseModel):
                     each_img_embed = each_img_embed.reshape(-1, each_img_embed.shape[-1])
                     each_img_embed = each_img_embed[:lengths[idx] * pn]
                 p_segs = each_prompt.split('<ImageHere>')
+                # print(p_segs)
+                # print(each_img_embed.shape)
                 interleave_emb = []
                 for idx, seg in enumerate(p_segs[:-1]):
                     p_tokens = self.llama_tokenizer(
                         seg, return_tensors="pt", add_special_tokens=False).to(img_embeds.device)
                     p_embed = self.embed_tokens(p_tokens.input_ids)
+                    # print( each_img_embed[None][:, idx * pn:(idx + 1) * pn].shape)
                     interleave_emb.append(torch.cat([p_embed, each_img_embed[None][:, idx * pn:(idx + 1) * pn]], dim=1))
                 wrapped_emb = torch.cat(interleave_emb, dim=1)
                 p_tokens = self.llama_tokenizer(

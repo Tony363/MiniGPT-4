@@ -26,19 +26,12 @@ def get_daisee_filtercap(
         2: 'very',
         3: 'very very'
     }
-    for subject_vid in os.listdir(label_path):
-        idx = df[df['ClipID'] == subject_vid.replace('.avi','')].index
-        row = df.iloc[:,idx].tolist()
+
+    for idx, row in df.iterrows():
         labels['annotations'].append({
-            'video_id':row[0].replace('.avi',''),
-            'caption': f"The student is {mapping[row[1]]} bored, {mapping[row[2]]} engaged, {mapping[row[3]]} confused and {mapping[row[-1]]} frustrated."
+            'video_id':row[0].replace('.avi','').replace('.mp4',''),
+            'caption': f"Boredom: {mapping[row[1]]}\nEngagement: {mapping[row[2]]}\nConfusion: {mapping[row[3]]}\nFrustration: {mapping[row[-1]]}"
         })
-    #     pass
-    # for idx, row in df.iterrows():
-    #     labels['annotations'].append({
-    #         'video_id':row[0].replace('.avi',''),
-    #         'caption': f"The student is {mapping[row[1]]} bored, {mapping[row[2]]} engaged, {mapping[row[3]]} confused and {mapping[row[-1]]} frustrated."
-    #     })
 
     with open(os.path.join("daisee_captions",outfile), 'w') as f:
         json.dump(labels,f)
@@ -62,15 +55,26 @@ def split_video(video_file, image_name_prefix, destination_path):
 
 if __name__ == "__main__":
     ann_path = '/home/tony/nvme2tb/DAiSEE/Labels/AllLabels.csv'
-    test_samples = '/home/tony/nvme2tb/DAiSEE_Frames/Test_frames'
-    val_samples = '/home/tony/nvme2tb/DAiSEE_Frames/Train_frames'
-    train_samples = '/home/tony/nvme2tb/DAiSEE_Frames/Validation_frames'
+    test_samples = '/home/tony/nvme2tb/DAiSEE/Labels/TestLabels.csv'
+    val_samples = '/home/tony/nvme2tb/DAiSEE/Labels/ValidationLabels.csv'
+    train_samples = '/home/tony/nvme2tb/DAiSEE/Labels/TrainLabels.csv'
+    train_val_samples = '/home/tony/nvme2tb/DAiSEE/Labels/TrainValidation.csv'
+    train = pd.read_csv(train_samples,index_col=False)
+    val = pd.read_csv(val_samples,index_col=False)
+    train_val = pd.concat([train,val],axis=0)
+    train_val.to_csv(train_val_samples,index=False)
     
-    original_labels = '/home/tony/nvme2tb/DAiSEE/Labels'
-    get_weird_samples(os.path.join(original_labels,"AllLabels.csv"))
+    get_weird_samples(ann_path)
     get_daisee_filtercap(test_samples,"test_filter_cap.json")
     get_daisee_filtercap(val_samples,"val_filter_cap.json")
     get_daisee_filtercap(train_samples,"train_filter_cap.json")
+
+    train = pd.read_csv(train_samples,index_col=False)
+    val = pd.read_csv(val_samples,index_col=False)
+    train_val = pd.concat([train,val],axis=0)
+    train_val.to_csv(train_val_samples,index=False)
+    get_daisee_filtercap(train_val_samples,"train_val_filter_cap.json")
+
 
     # dataset = os.listdir('/home/tony/nvme2tb/DAiSEE/DataSet')
     # split_video(

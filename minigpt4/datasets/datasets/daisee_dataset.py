@@ -1,6 +1,7 @@
 import os
 import random
 import glob
+import torch
 from PIL import Image
 import webdataset as wds
 from collections import OrderedDict
@@ -47,21 +48,21 @@ class DaiseeDataset(BaseDataset,__DisplMixin):
         ann = self.annotation[index]
         subject = ann['video_id'][:6]
         instruction,images = random.choice(self.instruction_pool),[]
-        instruction += f"\n### Input:\nImage Description: {ann['caption']}\n" 
-        print("WTF")
-        print(os.path.join(self.vis_root,subject,f"{ann['video_id']}-*.jpg"))
+        instruction += f"\n### Input:\n"#<img><ImageHere>" 
+
+        # print("WTF")
+        # print(os.path.join(self.vis_root,subject,f"{ann['video_id']}-*.jpg"))
         for image_path in sorted(glob.glob(os.path.join(self.vis_root,subject,f"{ann['video_id']}-*.jpg"))):
             image = self.vis_processor(Image.open(image_path).convert("RGB"))
             images.append(image)
             instruction += "<img><ImageHere>"
+        # print(len(images))
 
-        instruction += '\n' + self.question
-
-        print("PRINT INSTRUCTION HERE")
-        print(instruction)
+        instruction += self.question + "### Response:\n"
+        images = torch.stack(images)
         return{
             "image": images,
-            # "answer": ann['caption'],
-            # "image_id": ann['subject_id'],
+            "answer": ann['caption'],
+            "image_id": ann['video_id'],
             "instruction_input": instruction,
         } 

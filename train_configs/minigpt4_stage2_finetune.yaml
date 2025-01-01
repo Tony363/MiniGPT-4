@@ -1,13 +1,11 @@
 model:
   arch: minigpt4
   model_type: pretrain_vicuna0
-
   max_txt_len: 160
   end_sym: "###"
   prompt_path: "prompts/alignment.txt"
   prompt_template: '###Human: {} ###Assistant: '
-  # ckpt: 'checkpoint_stage2.pth'
-  ckpt: "/data/lupang/minigpt/downloads/prerained_minigpt4_7b_vicuna.pth"
+  ckpt: "prerained_minigpt4_7b_vicuna.pth"
 
 
 datasets:
@@ -30,13 +28,13 @@ run:
   warmup_lr: 1e-6
 
   weight_decay: 0.05
-  max_epoch: 20
+  max_epoch: 30
   iters_per_epoch: 200
   num_workers: 4
   warmup_steps: 200
 
   seed: 42
-  output_dir: "output/minigpt4_stage2_finetune"
+  output_dir: "output/minigpt4_stage2_daisee"
 
   amp: True
   resume_ckpt_path: null
@@ -45,7 +43,7 @@ run:
   train_splits: ["train"]
 
   device: "cuda"
-  world_size: 1
+  world_size: 2
   dist_url: "env://"
   distributed: True
 
