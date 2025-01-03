@@ -2,7 +2,7 @@ model:
   arch: minigpt4
   model_type: pretrain_vicuna0
   max_txt_len: 160
-  end_sym: "###"
+  end_sym: "" # "###"
   prompt_path: "prompts/alignment.txt"
   prompt_template: '###Human: {} ###Assistant: '
   ckpt: "prerained_minigpt4_7b_vicuna.pth"
@@ -28,13 +28,13 @@ run:
   warmup_lr: 1e-6
 
   weight_decay: 0.05
-  max_epoch: 30
+  max_epoch: 40
   iters_per_epoch: 200
   num_workers: 2
   warmup_steps: 200
 
   seed: 42
-  output_dir: "output/minigpt4_stage2_daisee"
+  output_dir: "output/minigpt4_stage2_daisee_trainval"
 
   amp: True
   resume_ckpt_path: null
@@ -47,5 +47,5 @@ run:
   dist_url: "env://"
   distributed: True
 
-  wandb_log: False
+  wandb_log: True
   job_name: minigpt4_finetune

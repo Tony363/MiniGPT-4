@@ -198,7 +198,7 @@ def main()->None:
             image,_ = model.encode_img(image.unsqueeze(0))
             img_list.append(image)
             instruct_prompt +="<img><ImageHere><\img>"
-         
+
         instruct_prompt += question + "\n### Response:\n"
         embs,max_new_tokens = embedding_prepare(model, instruct_prompt, img_list)
         inputs = generate_kwargs(embs=embs, stopping_criteria=stopping_criteria,max_new_tokens=max_new_tokens)

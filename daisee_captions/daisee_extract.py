@@ -30,7 +30,7 @@ def get_daisee_filtercap(
     for idx, row in df.iterrows():
         labels['annotations'].append({
             'video_id':row[0].replace('.avi','').replace('.mp4',''),
-            'caption': f"Boredom: {mapping[row[1]]}\nEngagement: {mapping[row[2]]}\nConfusion: {mapping[row[3]]}\nFrustration: {mapping[row[-1]]}"
+            'caption': f"Boredom: {mapping[row[1]]}\nEngagement: {mapping[row[2]]}\nConfusion: {mapping[row[3]]}\nFrustration: {mapping[row[-1]]}\n"
         })
 
     with open(os.path.join("daisee_captions",outfile), 'w') as f:
