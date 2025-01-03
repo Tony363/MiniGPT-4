@@ -83,7 +83,6 @@ class MiniGPTv2(MiniGPTBase):
             image_embeds = image_embeds[:, 1:, :]
             bs, pn, hs = image_embeds.shape
             image_embeds = image_embeds.view(bs, int(pn / 4), int(hs * 4))
-
             inputs_llama = self.llama_proj(image_embeds)
             atts_llama = torch.ones(inputs_llama.size()[:-1], dtype=torch.long).to(image.device)
         return inputs_llama, atts_llama

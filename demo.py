@@ -95,6 +95,7 @@ def upload_img(gr_img, text_input, chat_state):
         return None, None, gr.update(interactive=True), chat_state, None
     chat_state = CONV_VISION.copy()
     img_list = []
+    # print("upload_img",img_list)
     llm_message = chat.upload_img(gr_img, chat_state, img_list)
     chat.encode_img(img_list)
     return gr.update(interactive=False), gr.update(interactive=True, placeholder='Type and press Enter'), gr.update(value="Start Chatting", interactive=False), chat_state, img_list
@@ -103,6 +104,7 @@ def upload_img(gr_img, text_input, chat_state):
 def gradio_ask(user_message, chatbot, chat_state):
     if len(user_message) == 0:
         return gr.update(interactive=True, placeholder='Input should not be empty!'), chatbot, chat_state
+    # print("gradio_ask", user_message,chat_state)
     chat.ask(user_message, chat_state)
     chatbot = chatbot + [[user_message, None]]
     return '', chatbot, chat_state
@@ -168,4 +170,4 @@ with gr.Blocks() as demo:
     )
     clear.click(gradio_reset, [chat_state, img_list], [chatbot, image, text_input, upload_button, chat_state, img_list], queue=False)
 
-demo.launch(share=True, enable_queue=True)
+demo.launch(share=True)# enable_queue=True)

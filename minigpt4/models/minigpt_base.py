@@ -101,7 +101,7 @@ class MiniGPTBase(BaseModel):
             emb_lists = []
             if isinstance(prompts, str):
                 prompts = [prompts] * len(img_embeds)
-
+            # print("img_embeds",img_embeds.shape)
             for idx, (each_img_embed, each_prompt) in enumerate(zip(img_embeds, prompts)):
                 pn = each_img_embed.shape[-2]
                 if lengths is not None:
@@ -109,13 +109,13 @@ class MiniGPTBase(BaseModel):
                     each_img_embed = each_img_embed[:lengths[idx] * pn]
                 p_segs = each_prompt.split('<ImageHere>')
                 # print(p_segs)
-                # print(each_img_embed.shape)
+                # print("each_img_embed",each_img_embed.shape)
                 interleave_emb = []
                 for idx, seg in enumerate(p_segs[:-1]):
                     p_tokens = self.llama_tokenizer(
                         seg, return_tensors="pt", add_special_tokens=False).to(img_embeds.device)
                     p_embed = self.embed_tokens(p_tokens.input_ids)
-                    # print( each_img_embed[None][:, idx * pn:(idx + 1) * pn].shape)
+                    # print("in loop",each_img_embed[None][:, idx * pn:(idx + 1) * pn].shape)
                     interleave_emb.append(torch.cat([p_embed, each_img_embed[None][:, idx * pn:(idx + 1) * pn]], dim=1))
                 wrapped_emb = torch.cat(interleave_emb, dim=1)
                 p_tokens = self.llama_tokenizer(
@@ -214,6 +214,7 @@ class MiniGPTBase(BaseModel):
     def preparing_embedding(self, samples):
         ### prepare input tokens
         if 'image' in samples:
+            # print("WTF")
             img_embeds, img_atts = self.encode_img(samples["image"])
         else:
             img_embeds = img_atts = None

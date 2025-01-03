@@ -120,10 +120,12 @@ class MiniGPT4(MiniGPTBase):
 
         if len(image.shape) > 4:
             image = image.reshape(-1, *image.shape[-3:])
-
+        # print("image",image.shape)
         with self.maybe_autocast():
             image_embeds = self.ln_vision(self.visual_encoder(image)).to(device)
+            # print(image_embeds.shape)
             if self.has_qformer:
+                # print("has qformer")
                 image_atts = torch.ones(image_embeds.size()[:-1], dtype=torch.long).to(device)
 
                 query_tokens = self.query_tokens.expand(image_embeds.shape[0], -1, -1)
@@ -141,6 +143,7 @@ class MiniGPT4(MiniGPTBase):
                 image_embeds = image_embeds.view(bs, int(pn / 4), int(hs * 4))
 
                 inputs_llama = self.llama_proj(image_embeds)
+            # print("inputs_llama",inputs_llama.shape)
             atts_llama = torch.ones(inputs_llama.size()[:-1], dtype=torch.long).to(image.device)
         return inputs_llama, atts_llama
 

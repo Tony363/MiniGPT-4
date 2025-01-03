@@ -48,17 +48,19 @@ class DaiseeDataset(BaseDataset,__DisplMixin):
         ann = self.annotation[index]
         subject = ann['video_id'][:6]
         instruction,images = random.choice(self.instruction_pool),[]
-        instruction += f"\n### Input:\n"#<img><ImageHere>" 
+        instruction += f"\n\n### Input:\n<img><ImageHere><\img>\n" 
 
         # print("WTF")
         # print(os.path.join(self.vis_root,subject,f"{ann['video_id']}-*.jpg"))
         for image_path in sorted(glob.glob(os.path.join(self.vis_root,subject,f"{ann['video_id']}-*.jpg"))):
             image = self.vis_processor(Image.open(image_path).convert("RGB"))
             images.append(image)
-            instruction += "<img><ImageHere>"
+            # instruction += "<img><ImageHere>"
         # print(len(images))
 
-        instruction += self.question + "### Response:\n"
+        instruction += self.question + "\n### Response:\n"
+        # print("WTF")
+        # print(instruction)
         images = torch.stack(images)
         return{
             "image": images,
