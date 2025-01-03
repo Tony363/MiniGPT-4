@@ -20,3 +20,4 @@ datasets:
 
 run:
   task: image_text_pretrain
+  seed: 123456

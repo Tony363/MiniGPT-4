@@ -1,6 +1,8 @@
 import argparse
 import os
 import sys
+import glob
+import json
 import random
 import logging 
 import numpy as np
@@ -9,6 +11,7 @@ import torch.backends.cudnn as cudnn
 import gradio as gr
 import torchmetrics
 import minigpt4.tasks as tasks
+from PIL import Image
 
 from minigpt4.common.config import Config
 from minigpt4.common.dist_utils import get_rank
@@ -20,7 +23,7 @@ from minigpt4.models import *
 from minigpt4.processors import *
 from minigpt4.runners import *
 from minigpt4.tasks import *
-from minigpt4.conversation.conversation import StoppingCriteria
+from minigpt4.conversation.conversation import StoppingCriteriaList, StoppingCriteriaSub
 
 def init_logger(
     program:str    
@@ -67,6 +70,7 @@ def init_inference(args:argparse.ArgumentParser)->tuple:
     logger.info('Initializing Chat')
     logger.info(vars(args))
     cfg = Config(args)
+    setup_seeds(cfg)
 
     model_config = cfg.model_cfg
     model_config.device_8bit = args.gpu_id
@@ -74,14 +78,14 @@ def init_inference(args:argparse.ArgumentParser)->tuple:
     model = model_cls.from_config(model_config).to(device='cuda:{}'.format(args.gpu_id))
     vis_processor_cfg = cfg.datasets_cfg.cc_sbu_align.vis_processor.train
     vis_processor = registry.get_processor_class(vis_processor_cfg.name).from_config(vis_processor_cfg)
-    chat = ChatInference(model, vis_processor, device='cuda:{}'.format(args.gpu_id),annotate=annotate,conv_rec=3)
-    logger.info(f"USING DEVICE - {chat.model.device}")
+    # chat = ChatInference(model, vis_processor, device='cuda:{}'.format(args.gpu_id),annotate=annotate,conv_rec=3)
+    # logger.info(f"USING DEVICE - {chat.model.device}")
     logger.info('Initialization Finished')
-    return model,datasets
+    return model,vis_processor
 
 def generate_kwargs(
     embs:torch.tensor,
-    stopping_criteria:StoppingCriteria,
+    stopping_criteria:StoppingCriteriaList,
     max_new_tokens:int=300, 
     num_beams:int=1, 
     min_length:int=1, 
@@ -108,6 +112,7 @@ def embedding_prepare(
     prompt:str, 
     img_list:list,
     max_length:int=2000,
+    max_new_tokens:int=300, 
 )->torch.tensor:
     embs = model.get_context_emb(prompt, img_list)
     current_max_len = embs.shape[1] + max_new_tokens
@@ -116,7 +121,7 @@ def embedding_prepare(
                 'The model will not see the contexts outside the range.')
     begin_idx = max(0, current_max_len - max_length)
     embs = embs[:, begin_idx:]
-    return embs
+    return embs,max_new_tokens
 
 def model_answer(
     model:torch.nn.Module,
@@ -131,7 +136,7 @@ def model_answer(
 
 def parse_args():
     """
-    python3 inference.py --gpu_id 0 --cfg-path eval_confgs/minigpt4_eval.yaml
+    python3 inference.py --gpu-id 0 --cfg-path eval_configs/minigpt4_eval.yaml
     """
     parser = argparse.ArgumentParser(description="Testing")
     parser.add_argument('-cfg-path',"--cfg-path", required=True, help="path to configuration file.")
@@ -140,7 +145,7 @@ def parse_args():
     parser.add_argument(
         "--test-dir", 
         type=str, 
-        default='/nvme2tb/DAiSEE_Frames/Test_frames', 
+        default='/home/tony/nvme2tb/DAiSEE_Frames/Test_frames', 
         help="directory of images to evaluate"
     )
     parser.add_argument(
@@ -148,12 +153,6 @@ def parse_args():
         type=str, 
         default='daisee_captions/test_filter_cap.json', 
         help="directory of images to evaluate"
-    )
-    parser.add_argument(
-        "--seed", 
-        type=int, 
-        default=123456, 
-        help="seed"
     )
     parser.add_argument(
         "--options",
@@ -174,17 +173,16 @@ def parse_args():
 
 def main()->None:
     args = parse_args()
-    setup_seeds(args.seed)
-    model,datasets = init_inference(args)
+    model,vis_processor = init_inference(args)
     
     test_label_path,test_dir = args.test_labels,args.test_dir
     with open(test_label_path,'r') as f:
-        labels = json.load(test_label_path)
+        labels = json.load(f)
     
     with open(args.eval_prompts, 'r', encoding='utf-8') as file:
         prompt = file.read()
     instruction_pool = prompt.split('\n\n')
-    question = "Question: What is the students level of emotional state?\n"
+    question = "\nQuestion: What is the students level of emotional state?\n"
 
     stop_words_ids = [torch.tensor([2]).to("cuda:{}".format(args.gpu_id))]
     stopping_criteria = StoppingCriteriaList([StoppingCriteriaSub(stops=stop_words_ids)])
@@ -192,18 +190,21 @@ def main()->None:
     for subject in labels['annotations']:
         subject_sample = subject['video_id']
         instruct_prompt = random.choice(instruction_pool) 
-        instruct_prompt += f"\n\n### Input:\n<img><ImageHere><\img>\n" + question + "\n### Response:\n"
+        instruct_prompt += f"\n\n### Input:\n"
         
         img_list = []
-        for image_path in sorted(glob.glob(os.path.join(test_dir,subject[:6],f"{subject_sample}-*.jpg"))):
-            image = image_processor(Image.open(image_path).convert("RGB")).to(device='cuda:{}'.format(args.gpu_id))
+        for image_path in sorted(glob.glob(os.path.join(test_dir,subject_sample[:6],f"{subject_sample}-*.jpg"))):
+            image = vis_processor(Image.open(image_path).convert("RGB")).to(device='cuda:{}'.format(args.gpu_id))
+            image,_ = model.encode_img(image.unsqueeze(0))
             img_list.append(image)
-
-        embs = embedding_prepare(model, instruct_prompt, img_list)
-        inputs = generate_kwargs(embs=embs, stopping_criteria=stopping_criteria)
+            instruct_prompt +="<img><ImageHere><\img>"
+         
+        instruct_prompt += question + "\n### Response:\n"
+        embs,max_new_tokens = embedding_prepare(model, instruct_prompt, img_list)
+        inputs = generate_kwargs(embs=embs, stopping_criteria=stopping_criteria,max_new_tokens=max_new_tokens)
         output_text = model_answer(model, inputs)
         logger.info(f"subject: {subject_sample}\noutput: {output_text}\n")
-        break
+        # break
 
 if __name__ == "__main__":
     program = os.path.basename(__file__)

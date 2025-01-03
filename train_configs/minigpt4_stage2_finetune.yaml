@@ -47,5 +47,5 @@ run:
   dist_url: "env://"
   distributed: True
 
-  wandb_log: True
+  wandb_log: False
   job_name: minigpt4_finetune

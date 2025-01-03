@@ -254,7 +254,8 @@ class MiniGPTBase(BaseModel):
             ### prepare target tokens
             self.llama_tokenizer.padding_side = "right"
             text = [t + self.end_sym for t in samples["answer"]]
-
+            print("TEXT")
+            print(text)
             regress_tokens = self.llama_tokenizer(
                 text,
                 return_tensors="pt",
