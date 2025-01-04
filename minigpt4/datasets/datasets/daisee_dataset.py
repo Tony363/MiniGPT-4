@@ -21,15 +21,19 @@ class __DisplMixin:
         )
 
 class DaiseeDataset(BaseDataset,__DisplMixin):
-    def __init__(self, vis_processor, text_processor, vis_root, ann_paths,instruct_prompts=None):
+    def __init__(self, vis_processor, text_processor, vis_root, ann_paths,instruct_prompts=None,question_prompts=None):
         super().__init__(vis_processor, text_processor, vis_root, ann_paths)
 
         self.instruction_pool = ""
-        self.question = "Question: What is the students engagement level?\n"
+        self.questions = self.instruction_pool = None
+
+        if question_prompts is not None:
+            with open(question_prompts, 'r', encoding='utf-8') as file:
+                self.questions = file.readlines()
+            
         if instruct_prompts is not None:
             with open(instruct_prompts, 'r', encoding='utf-8') as file:
-                prompt = file.read()
-            self.instruction_pool = prompt.split('\n\n')
+                self.instruction_pool = file.read().split('\n\n')
 
         exist_annotation = []
         for ann in self.annotation:
@@ -58,7 +62,7 @@ class DaiseeDataset(BaseDataset,__DisplMixin):
             # instruction += "<img><ImageHere>"
         # print(len(images))
 
-        instruction += self.question + "\n### Response:\n"
+        instruction += random.choice(self.questions) +"\n### Response:\n"
         # print("WTF")
         # print(instruction)
         images = torch.stack(images)

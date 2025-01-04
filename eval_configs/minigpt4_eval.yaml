@@ -5,7 +5,7 @@ model:
   end_sym: ""
   low_resource: True
   prompt_template: '###Human: {} ###Assistant: '
-  ckpt: 'minigpt4/output/minigpt4_stage2_daisee_trainval/20250104055/checkpoint_39.pth'
+  ckpt: 'minigpt4/output/minigpt4_stage2_daisee_trainval/20250104130/checkpoint_39.pth'
 
 
 datasets:

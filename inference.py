@@ -86,13 +86,13 @@ def init_inference(args:argparse.ArgumentParser)->tuple:
 def generate_kwargs(
     embs:torch.tensor,
     stopping_criteria:StoppingCriteriaList,
-    max_new_tokens:int=100, 
+    max_new_tokens:int=20, 
     num_beams:int=1, 
     min_length:int=1, 
     top_p:float=0.9,
     repetition_penalty:int=1.50, 
     length_penalty:int=1, 
-    temperature:int=0.1, 
+    temperature:int=0.01, 
 )->dict:
     return dict(
         inputs_embeds=embs,

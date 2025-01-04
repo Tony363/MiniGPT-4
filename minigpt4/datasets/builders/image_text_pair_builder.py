@@ -563,7 +563,8 @@ class DaiseeBuilder(BaseDatasetBuilder):
             text_processor=self.text_processors["train"],
             ann_paths=build_info.ann_paths,
             vis_root=build_info.vis_root,
-            instruct_prompts=build_info.prompts
+            instruct_prompts=build_info.prompts,
+            question_prompts=build_info.questions
         )
 
         return datasets
