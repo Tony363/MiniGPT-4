@@ -21,19 +21,19 @@ def get_daisee_filtercap(
         'annotations':[]
     }
     mapping = {
-        0: 'not',
-        1: 'not very',
-        2: 'very',
-        3: 'very very'
+        0: 'Not-Engaged',
+        1: 'Barely-Engaged',
+        2: 'Engaged',
+        3: 'Highly-Engaged'
     }
 
     for idx, row in df.iterrows():
         labels['annotations'].append({
             'video_id':row[0].replace('.avi','').replace('.mp4',''),
-            'caption': f"Boredom: {mapping[row[1]]}\nEngagement: {mapping[row[2]]}\nConfusion: {mapping[row[3]]}\nFrustration: {mapping[row[-1]]}\n"
+            'caption': f"The student is {mapping[row[2]]}"
         })
 
-    with open(os.path.join("daisee_captions",outfile), 'w') as f:
+    with open(os.path.join("/home/tony/MiniGPT-4/daisee_captions",outfile), 'w') as f:
         json.dump(labels,f)
 
     return labels
@@ -59,10 +59,6 @@ if __name__ == "__main__":
     val_samples = '/home/tony/nvme2tb/DAiSEE/Labels/ValidationLabels.csv'
     train_samples = '/home/tony/nvme2tb/DAiSEE/Labels/TrainLabels.csv'
     train_val_samples = '/home/tony/nvme2tb/DAiSEE/Labels/TrainValidation.csv'
-    train = pd.read_csv(train_samples,index_col=False)
-    val = pd.read_csv(val_samples,index_col=False)
-    train_val = pd.concat([train,val],axis=0)
-    train_val.to_csv(train_val_samples,index=False)
     
     get_weird_samples(ann_path)
     get_daisee_filtercap(test_samples,"test_filter_cap.json")

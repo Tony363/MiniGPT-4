@@ -86,13 +86,13 @@ def init_inference(args:argparse.ArgumentParser)->tuple:
 def generate_kwargs(
     embs:torch.tensor,
     stopping_criteria:StoppingCriteriaList,
-    max_new_tokens:int=300, 
+    max_new_tokens:int=100, 
     num_beams:int=1, 
     min_length:int=1, 
     top_p:float=0.9,
-    repetition_penalty:int=1.05, 
+    repetition_penalty:int=1.50, 
     length_penalty:int=1, 
-    temperature:int=1.0, 
+    temperature:int=0.1, 
 )->dict:
     return dict(
         inputs_embeds=embs,
@@ -182,7 +182,7 @@ def main()->None:
     with open(args.eval_prompts, 'r', encoding='utf-8') as file:
         prompt = file.read()
     instruction_pool = prompt.split('\n\n')
-    question = "\nQuestion: What is the students level of emotional state?\n"
+    question = "\nQuestion: What is the students engagement level?\n"
 
     stop_words_ids = [torch.tensor([2]).to("cuda:{}".format(args.gpu_id))]
     stopping_criteria = StoppingCriteriaList([StoppingCriteriaSub(stops=stop_words_ids)])
@@ -197,7 +197,7 @@ def main()->None:
             image = vis_processor(Image.open(image_path).convert("RGB")).to(device='cuda:{}'.format(args.gpu_id))
             image,_ = model.encode_img(image.unsqueeze(0))
             img_list.append(image)
-            instruct_prompt +="<img><ImageHere><\img>"
+            instruct_prompt +="<img><ImageHere><\img>"# TODO add index number of frame?
 
         instruct_prompt += question + "\n### Response:\n"
         embs,max_new_tokens = embedding_prepare(model, instruct_prompt, img_list)

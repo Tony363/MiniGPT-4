@@ -25,7 +25,7 @@ class DaiseeDataset(BaseDataset,__DisplMixin):
         super().__init__(vis_processor, text_processor, vis_root, ann_paths)
 
         self.instruction_pool = ""
-        self.question = "Question: What is the students level of emotional state?\n"
+        self.question = "Question: What is the students engagement level?\n"
         if instruct_prompts is not None:
             with open(instruct_prompts, 'r', encoding='utf-8') as file:
                 prompt = file.read()
