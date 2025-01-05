@@ -187,6 +187,7 @@ def main()->None:
     stop_words_ids = [torch.tensor([2]).to("cuda:{}".format(args.gpu_id))]
     stopping_criteria = StoppingCriteriaList([StoppingCriteriaSub(stops=stop_words_ids)])
 
+    answers = []
     for subject in labels['annotations']:
         subject_sample = subject['video_id']
         instruct_prompt = random.choice(instruction_pool) 
@@ -205,6 +206,13 @@ def main()->None:
         output_text = model_answer(model, inputs)
         logger.info(f"subject: {subject_sample}\noutput: {output_text}\n")
         # break
+        answers.append({
+            "subject": subject_sample,
+            "answer": output_text
+        })
+    
+    with open(f"results/{os.path.splitext(program)[0]}.json", 'w') as f:
+        json.dump(answers, f, indent=4)
 
 if __name__ == "__main__":
     program = os.path.basename(__file__)
