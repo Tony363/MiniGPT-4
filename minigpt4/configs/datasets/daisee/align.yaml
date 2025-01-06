@@ -16,3 +16,4 @@ datasets:
       storage: /home/tony/MiniGPT-4/daisee_captions
       prompts: /home/tony/MiniGPT-4/prompts/instruction_align.txt
       questions: /home/tony/MiniGPT-4/prompts/daisee_questions.txt
+      emotion: 'frustration' # frustration, engagement, confusion,boredom

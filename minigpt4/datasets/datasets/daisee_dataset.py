@@ -21,7 +21,16 @@ class __DisplMixin:
         )
 
 class DaiseeDataset(BaseDataset,__DisplMixin):
-    def __init__(self, vis_processor, text_processor, vis_root, ann_paths,instruct_prompts=None,question_prompts=None):
+    def __init__(
+        self, 
+        vis_processor, 
+        text_processor, 
+        vis_root, 
+        ann_paths,
+        emotion:str,
+        instruct_prompts=None,
+        question_prompts=None,
+    ):
         super().__init__(vis_processor, text_processor, vis_root, ann_paths)
 
         self.instruction_pool = ""
@@ -36,7 +45,7 @@ class DaiseeDataset(BaseDataset,__DisplMixin):
                 self.instruction_pool = file.read().split('\n\n')
 
         exist_annotation = []
-        for ann in self.annotation:
+        for ann in self.annotation[emotion]:
             subject,exists = ann['video_id'][:6],True
             for image_path in sorted(glob.glob(os.path.join(self.vis_root,subject,f"{ann['video_id']}-*.jpg"))):
                 if not os.path.exists(image_path):
