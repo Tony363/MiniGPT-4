@@ -18,12 +18,7 @@ def get_daisee_filtercap(
 )->dict:
     df = pd.read_csv(label_path,index_col=False)
     labels = {
-        'annotations':{
-            'engagement':[],
-            'frustration':[],
-            'confusion':[],
-            'boredom':[],
-        }
+        'annotations':[]
     }
     engaged_map = {
         0: 'Not-Engaged',
@@ -31,41 +26,41 @@ def get_daisee_filtercap(
         2: 'Engaged',
         3: 'Highly-Engaged'
     }
-    frustration_map = {
-        0: 'Not-Frustrated',
-        1: 'Barely-Frustrated',
-        2: 'Frustrated',
-        3: 'Highly-Frustrated'
-    }
-    confusion_map = {
-        0: 'Not-Confused',
-        1: 'Barely-Confused',
-        2: 'Confused',
-        3: 'Highly-Confused'
-    }
-    bored_map = {
-        0: 'Not-Bored',
-        1: 'Barely-Bored',
-        2: 'Bored',
-        3: 'Highly-Bored'
-    }
+    # frustration_map = {
+    #     0: 'Not-Frustrated',
+    #     1: 'Barely-Frustrated',
+    #     2: 'Frustrated',
+    #     3: 'Highly-Frustrated'
+    # }
+    # confusion_map = {
+    #     0: 'Not-Confused',
+    #     1: 'Barely-Confused',
+    #     2: 'Confused',
+    #     3: 'Highly-Confused'
+    # }
+    # bored_map = {
+    #     0: 'Not-Bored',
+    #     1: 'Barely-Bored',
+    #     2: 'Bored',
+    #     3: 'Highly-Bored'
+    # }
     for idx, row in df.iterrows():
-        labels['annotations']['engagement'].append({
+        labels['annotations'].append({
             'video_id':row[0].replace('.avi','').replace('.mp4',''),
             'caption': f"The student is {engaged_map[row[2]]}"
         })
-        labels['annotations']['frustration'].append({
-            'video_id':row[0].replace('.avi','').replace('.mp4',''),
-            'caption': f"The student is {frustration_map[row[-1]]}"
-        })
-        labels['annotations']['confusion'].append({
-            'video_id':row[0].replace('.avi','').replace('.mp4',''),
-            'caption': f"The student is {confusion_map[row[-2]]}"
-        })
-        labels['annotations']['boredom'].append({
-            'video_id':row[0].replace('.avi','').replace('.mp4',''),
-            'caption': f"The student is {bored_map[row[-3]]}"
-        })
+        # labels['annotations']['frustration'].append({
+        #     'video_id':row[0].replace('.avi','').replace('.mp4',''),
+        #     'caption': f"The student is {frustration_map[row[-1]]}"
+        # })
+        # labels['annotations']['confusion'].append({
+        #     'video_id':row[0].replace('.avi','').replace('.mp4',''),
+        #     'caption': f"The student is {confusion_map[row[-2]]}"
+        # })
+        # labels['annotations']['boredom'].append({
+        #     'video_id':row[0].replace('.avi','').replace('.mp4',''),
+        #     'caption': f"The student is {bored_map[row[-3]]}"
+        # })
 
     with open(os.path.join("/home/tony/MiniGPT-4/daisee_captions",outfile), 'w') as f:
         json.dump(labels,f)
@@ -105,13 +100,3 @@ if __name__ == "__main__":
     train_val.to_csv(train_val_samples,index=False)
     get_daisee_filtercap(train_val_samples,"train_val_filter_cap.json")
 
-
-    # dataset = os.listdir('/home/tony/nvme2tb/DAiSEE/DataSet')
-    # split_video(
-    #     video_file='/home/tony/nvme2tb/DAiSEE/DataSet/Test/videos/500044/5000441001/5000441001.avi',
-    #     image_name_prefix='5000441001',
-    #     destination_path=''
-    # )
-
-    # print ("================================================================================\n")
-    # print ("Frame Extraction Successful")

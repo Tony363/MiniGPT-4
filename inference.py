@@ -205,10 +205,11 @@ def main()->None:
         inputs = generate_kwargs(embs=embs, stopping_criteria=stopping_criteria,max_new_tokens=max_new_tokens)
         output_text = model_answer(model, inputs)
         logger.info(f"subject: {subject_sample}\noutput: {output_text}\n")
-        # break
         answers.append({
-            "subject": subject_sample,
-            "answer": output_text
+            "video_id": subject_sample,
+            'Q': question.split('Question:')[-1],
+            "pred": output_text,
+            'A': subject['caption'],
         })
     
     with open(f"results/{os.path.splitext(program)[0]}.json", 'w') as f:
