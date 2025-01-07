@@ -23,9 +23,9 @@ def annotate(prediction_set, caption_files, output_dir):
     Evaluates question and answer pairs using GPT-3 and
     returns a score for detailed orientation.
     """
-    env_path = find_dotenv('/home/tony/MiniGPT4-video/.env')
-    load_dotenv(env_path)
-    client = openai.OpenAI(api_key=os.getenv("API_KEY"))
+    # env_path = find_dotenv('/home/tony/MiniGPT4-video/.env')
+    # load_dotenv(env_path)
+    # client = openai.OpenAI(api_key=os.getenv("API_KEY"))
     for file in caption_files:
         key = file[:-5] # Strip file extension
         qa_set = prediction_set[key]
@@ -34,7 +34,7 @@ def annotate(prediction_set, caption_files, output_dir):
         pred = qa_set['pred']
         try:
             # Compute the detailed-orientation score
-            completion = client.chat.completions.create(
+            completion = openai.ChatCompletion.create(
                 model="gpt-3.5-turbo",
                 messages=[
                     {
@@ -93,7 +93,7 @@ def main():
 
     # Iterate through each sample in pred_contents
     for sample in pred_contents:
-        video_id = sample['video_name']
+        video_id = sample['video_id']
         if video_id in video_id_counts:
             video_id_counts[video_id] += 1
         else:
@@ -101,11 +101,11 @@ def main():
 
         # Create a new sample with the modified key
         new_sample = sample
-        new_sample['video_name'] = f"{video_id}_{video_id_counts[video_id]}"
+        new_sample['video_id'] = f"{video_id}_{video_id_counts[video_id]}"
         new_pred_contents.append(new_sample)
 
     # Generating list of id's and corresponding files
-    id_list = [x['video_name'] for x in new_pred_contents]
+    id_list = [x['video_id'] for x in new_pred_contents]
     caption_files = [f"{id}.json" for id in id_list]
 
     output_dir = args.output_dir
@@ -116,7 +116,7 @@ def main():
     # Preparing dictionary of question-answer sets
     prediction_set = {}
     for sample in new_pred_contents:
-        id = sample['video_name']
+        id = sample['video_id']
         question = sample['Q']
         answer = sample['A']
         pred = sample['pred']

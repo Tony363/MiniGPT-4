@@ -12,11 +12,11 @@ warnings.filterwarnings('ignore')
 def parse_args():
     """
         python3 test_benchmark/quantitative_evaluation/benchmark_dataset_generation/generate_correctness_detailed_context_qa.py\
-        --gt_caption_folder MiniGPT-4/daisee_captions/test_filter_cap.json\
+        --gt_caption_folder /home/tony/MiniGPT-4/daisee_captions\
         --output_dir /home/tony/MiniGPT-4/gpt_evaluation/daisee_image\
-        --output_json /home/tony/MiniGPT-4/gpt_evaluation/consistency_qa_raw.json\
+        --output_json test_benchmark/quantitative_evaluation/benchmark_dataset_generation/generate_correctness_detailed_context_qa.json\
         --api_key $OPENAI_API_KEY\
-        --num_tasks 16
+        --num_tasks 1
     """
     parser = argparse.ArgumentParser(description="question-answer-generation-using-gpt-3")
     parser.add_argument("--gt_caption_folder", required=True, help="The path to captions")

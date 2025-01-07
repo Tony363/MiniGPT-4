@@ -136,7 +136,7 @@ def model_answer(
 
 def parse_args():
     """
-    python3 inference.py --gpu-id 0 --cfg-path eval_configs/minigpt4_eval.yaml
+    python3 inference.py --gpu-id 0 --cfg-path eval_configs/minigpt4_eval.yaml --consistency-qa gpt_evaluation/consistency_qa_raw.json
     """
     parser = argparse.ArgumentParser(description="Testing")
     parser.add_argument('-cfg-path',"--cfg-path", required=True, help="path to configuration file.")
@@ -167,6 +167,13 @@ def parse_args():
         default='prompts/instruction_align.txt', 
         help="text file of instruction prompts"
     )
+    parser.add_argument(
+        '-consistency-qa','--consistency-qa', 
+        type=str,
+        default='/home/tony/MiniGPT-4/gpt_evaluation/consistency_qa_raw.json',
+        help='json of qa pairs', 
+        required=True
+    )
     args = parser.parse_args()
     return args
 
@@ -182,7 +189,10 @@ def main()->None:
     with open(args.eval_prompts, 'r', encoding='utf-8') as file:
         prompt = file.read()
     instruction_pool = prompt.split('\n\n')
+
     question = "\nQuestion: What is the students engagement level?\n"
+    with open(args.consistency_qa,'r') as f:
+        qa_pairs = json.load(f)
 
     stop_words_ids = [torch.tensor([2]).to("cuda:{}".format(args.gpu_id))]
     stopping_criteria = StoppingCriteriaList([StoppingCriteriaSub(stops=stop_words_ids)])
@@ -193,6 +203,7 @@ def main()->None:
         instruct_prompt = random.choice(instruction_pool) 
         instruct_prompt += f"\n\n### Input:\n"
         
+        questions = qa_pairs[subject_sample]['Q1'],qa_pairs[subject_sample]['Q2']
         img_list = []
         for image_path in sorted(glob.glob(os.path.join(test_dir,subject_sample[:6],f"{subject_sample}-*.jpg"))):
             image = vis_processor(Image.open(image_path).convert("RGB")).to(device='cuda:{}'.format(args.gpu_id))
@@ -203,15 +214,25 @@ def main()->None:
         instruct_prompt += question + "\n### Response:\n"
         embs,max_new_tokens = embedding_prepare(model, instruct_prompt, img_list)
         inputs = generate_kwargs(embs=embs, stopping_criteria=stopping_criteria,max_new_tokens=max_new_tokens)
-        output_text = model_answer(model, inputs)
-        logger.info(f"subject: {subject_sample}\noutput: {output_text}\n")
+        pred = model_answer(model, inputs)
+        
+        instruct_prompt = "Question: " + instruct_prompt.replace(question,random.choice(questions)) + "\n### Response:\n"
+        embs,max_new_tokens = embedding_prepare(model, instruct_prompt, img_list)
+        inputs = generate_kwargs(embs=embs, stopping_criteria=stopping_criteria,max_new_tokens=max_new_tokens)
+        pred_q1 = model_answer(model, inputs)
+
+
+
+        logger.info(f"subject: {subject_sample}\noutput: {pred}\n")
         answers.append({
             "video_id": subject_sample,
             'Q': question.split('Question:')[-1],
-            "pred": output_text,
+            'Q1':question.split('Question:')[-1],
+            "pred": pred,
+            'pred1':pred_q1,
+            'pred2':pred_q2,
             'A': subject['caption'],
         })
-    
     with open(f"results/{os.path.splitext(program)[0]}.json", 'w') as f:
         json.dump(answers, f, indent=4)
 
