@@ -1,3 +1,5 @@
+daisee_captions/cv_benchmarks/*
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

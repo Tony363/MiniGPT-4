@@ -136,7 +136,7 @@ def model_answer(
 
 def parse_args():
     """
-    python3 inference.py --gpu-id 0 --cfg-path eval_configs/minigpt4_eval.yaml --consistency-qa gpt_evaluation/consistency_qa_raw.json
+    python3 inference.py --gpu-id 1 --cfg-path eval_configs/minigpt4_eval.yaml --consistency-qa gpt_evaluation/consistency_qa_raw.json
     """
     parser = argparse.ArgumentParser(description="Testing")
     parser.add_argument('-cfg-path',"--cfg-path", required=True, help="path to configuration file.")
@@ -198,6 +198,7 @@ def main()->None:
     stopping_criteria = StoppingCriteriaList([StoppingCriteriaSub(stops=stop_words_ids)])
 
     answers = []
+    model.eval()
     for subject in labels['annotations']:
         subject_sample = subject['video_id']
         instruct_prompt = random.choice(instruction_pool) 
@@ -212,11 +213,11 @@ def main()->None:
             instruct_prompt +="<img><ImageHere><\img>"# TODO add index number of frame?
 
         instruct_prompt += question + "\n### Response:\n"
+        
         embs,max_new_tokens = embedding_prepare(model, instruct_prompt, img_list)
         inputs = generate_kwargs(embs=embs, stopping_criteria=stopping_criteria,max_new_tokens=max_new_tokens)
         pred = model_answer(model, inputs)
         
-        instruct_prompt = "Question: " + instruct_prompt.replace(question,random.choice(questions)) + "\n### Response:\n"
         embs,max_new_tokens = embedding_prepare(model, instruct_prompt, img_list)
         inputs = generate_kwargs(embs=embs, stopping_criteria=stopping_criteria,max_new_tokens=max_new_tokens)
         pred_q1 = model_answer(model, inputs)
@@ -229,10 +230,11 @@ def main()->None:
             'Q': question.split('Question:')[-1],
             'Q1':question.split('Question:')[-1],
             "pred": pred,
-            'pred1':pred_q1,
-            'pred2':pred_q2,
+            'pred1':pred,
+            'pred2':pred_q1,
             'A': subject['caption'],
         })
+        
     with open(f"results/{os.path.splitext(program)[0]}.json", 'w') as f:
         json.dump(answers, f, indent=4)
 
