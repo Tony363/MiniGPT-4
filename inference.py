@@ -239,6 +239,25 @@ def main()->None:
         json.dump(answers, f, indent=4)
 
 if __name__ == "__main__":
+    """
+    /home/tony/MiniGPT-4/results/daisee_inference.json 1784                            
+    completed_files: 1784                                                              
+    incomplete_files: 0                                                                
+    All evaluation completed!                                                          
+    Average score for correctness: 4.244955156950673                                   
+    completed_files: 1784                                                              
+    incomplete_files: 0                                                                
+    All evaluation completed!                                                          
+    Average score for detailed orientation: 4.040919282511211                          
+    completed_files: 1784                                                              
+    incomplete_files: 0                                                                
+    All evaluation completed!                                                          
+    Average score for contextual understanding: 4.286995515695067                      
+    completed_files: 1784                                                              
+    incomplete_files: 0                                                                
+    All evaluation completed!                                                          
+    Average score temporal understanding: 4.3402466367713
+    """
     program = os.path.basename(__file__)
     if os.path.exists(f"logs/{os.path.splitext(program)[0]}.log"):
         os.remove(f"logs/{os.path.splitext(program)[0]}.log")
