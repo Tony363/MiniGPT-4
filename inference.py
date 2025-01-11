@@ -12,6 +12,7 @@ import gradio as gr
 import torchmetrics
 import minigpt4.tasks as tasks
 from PIL import Image
+from torchmetrics.classification import MulticlassAccuracy, MulticlassPrecision, MulticlassRecall,MulticlassF1Score
 
 from minigpt4.common.config import Config
 from minigpt4.common.dist_utils import get_rank
@@ -140,7 +141,7 @@ def parse_args():
     """
     parser = argparse.ArgumentParser(description="Testing")
     parser.add_argument('-cfg-path',"--cfg-path", required=True, help="path to configuration file.")
-    parser.add_argument('-classes',"--classes",type=int, default=3,help="The number of classes")
+    parser.add_argument('-classes',"--classes",type=int, default=4,help="The number of classes")
     parser.add_argument("--gpu-id", type=int, default=0, help="specify the gpu to load the model.")
     parser.add_argument(
         "--test-dir", 
@@ -177,14 +178,39 @@ def parse_args():
     args = parser.parse_args()
     return args
 
+def load_metrics(num_classes:int)->torchmetrics.MetricCollection:
+    metrics = torchmetrics.MetricCollection([
+        MulticlassAccuracy(num_classes=num_classes, average="micro"),
+        MulticlassPrecision(num_classes=num_classes, average="macro"),
+        MulticlassRecall(num_classes=num_classes, average="macro"),
+        MulticlassF1Score(num_classes=num_classes, average="macro"),
+    ])
+    return metrics
+
+
+def get_test_labels(
+    label_path:str
+)->dict:
+    mapping = {
+        'The student is Not-Engaged':0,
+        'The student is Barely-Engaged':1,
+        'The student is Engaged':2,
+        'The student is Highly-Engaged':3
+    }
+    with open(label_path,'r') as f:
+        labels = json.load(f)
+
+    with open(os.path.join('/'.join(label_path.split('/')[:-1]),'eval_labels.json'),'w') as f:
+        json.dump(labels,f,indent=4)
+    
+    return labels,mapping
+
 
 def main()->None:
     args = parse_args()
     model,vis_processor = init_inference(args)
     
     test_label_path,test_dir = args.test_labels,args.test_dir
-    with open(test_label_path,'r') as f:
-        labels = json.load(f)
     
     with open(args.eval_prompts, 'r', encoding='utf-8') as file:
         prompt = file.read()
@@ -194,17 +220,29 @@ def main()->None:
     with open(args.consistency_qa,'r') as f:
         qa_pairs = json.load(f)
 
+    labels,mapping = get_test_labels(
+        label_path=test_label_path
+    )
+
     stop_words_ids = [torch.tensor([2]).to("cuda:{}".format(args.gpu_id))]
     stopping_criteria = StoppingCriteriaList([StoppingCriteriaSub(stops=stop_words_ids)])
 
-    answers = []
+    metrics = load_metrics(args.classes).to(model.device)
+    inference_samples = len(labels['annotations'])
+    logger.info(f"INFERENCE SAMPLES - {inference_samples}")
+    pred_table,target_table = torch.zeros(inference_samples).to(model.device),torch.zeros(inference_samples).to(model.device)
     model.eval()
-    for subject in labels['annotations']:
+
+    answers = []
+    for i,subject in enumerate(labels['annotations'][:2]):
         subject_sample = subject['video_id']
         instruct_prompt = random.choice(instruction_pool) 
         instruct_prompt += f"\n\n### Input:\n"
         
         questions = qa_pairs[subject_sample]['Q1'],qa_pairs[subject_sample]['Q2']
+        target_table[i] = mapping[subject['caption']]
+        pred_table[i] = target_table[i]
+
         img_list = []
         for image_path in sorted(glob.glob(os.path.join(test_dir,subject_sample[:6],f"{subject_sample}-*.jpg"))):
             image = vis_processor(Image.open(image_path).convert("RGB")).to(device='cuda:{}'.format(args.gpu_id))
@@ -217,14 +255,22 @@ def main()->None:
         embs,max_new_tokens = embedding_prepare(model, instruct_prompt, img_list)
         inputs = generate_kwargs(embs=embs, stopping_criteria=stopping_criteria,max_new_tokens=max_new_tokens)
         pred = model_answer(model, inputs)
-        
+
+        logger.info(f"SUBJECT: {subject_sample}")
+        logger.info(f"CAPTION - {subject['caption'].split(' ')[-1].lower()}")
+        logger.info(f"OUTPUT - {pred.lower()}")
+        if subject['caption'].split(' ')[-1].lower() not in pred.lower():
+            pred_table[i] = (target_table[i] - 1) % args.classes
+        performance = metrics.forward(pred_table[:i + 1],target_table[:i + 1])
+        logger.info(f"ACC - {performance['MulticlassAccuracy']}")
+        logger.info(f"PR - {performance['MulticlassPrecision']}")
+        logger.info(f"RE - {performance['MulticlassRecall']}")
+        logger.info(f"F1 - {performance['MulticlassF1Score']}")
+
         embs,max_new_tokens = embedding_prepare(model, instruct_prompt, img_list)
         inputs = generate_kwargs(embs=embs, stopping_criteria=stopping_criteria,max_new_tokens=max_new_tokens)
         pred_q1 = model_answer(model, inputs)
-
-
-
-        logger.info(f"subject: {subject_sample}\noutput: {pred}\n")
+        
         answers.append({
             "video_id": subject_sample,
             'Q': question.split('Question:')[-1],
@@ -234,7 +280,14 @@ def main()->None:
             'pred2':pred_q1,
             'A': subject['caption'],
         })
-        
+
+
+    performance = metrics.compute()
+    logger.info(f"FINAL ACC - {performance['MulticlassAccuracy']}")
+    logger.info(f"FINAL PR - {performance['MulticlassPrecision']}")
+    logger.info(f"FINAL RE - {performance['MulticlassRecall']}")
+    logger.info(f"FINAL F1 - {performance['MulticlassF1Score']}")
+    metrics.reset()
     with open(f"results/{os.path.splitext(program)[0]}.json", 'w') as f:
         json.dump(answers, f, indent=4)
 
