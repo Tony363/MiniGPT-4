@@ -234,7 +234,7 @@ def main()->None:
     model.eval()
 
     answers = []
-    for i,subject in enumerate(labels['annotations'][:2]):
+    for i,subject in enumerate(labels['annotations']):
         subject_sample = subject['video_id']
         instruct_prompt = random.choice(instruction_pool) 
         instruct_prompt += f"\n\n### Input:\n"
@@ -266,7 +266,8 @@ def main()->None:
         logger.info(f"PR - {performance['MulticlassPrecision']}")
         logger.info(f"RE - {performance['MulticlassRecall']}")
         logger.info(f"F1 - {performance['MulticlassF1Score']}")
-
+        
+        instruct_prompt = instruct_prompt.replace(question,random.choice(questions))
         embs,max_new_tokens = embedding_prepare(model, instruct_prompt, img_list)
         inputs = generate_kwargs(embs=embs, stopping_criteria=stopping_criteria,max_new_tokens=max_new_tokens)
         pred_q1 = model_answer(model, inputs)
