@@ -1,5 +1,6 @@
 import argparse
 import os
+import re
 import sys
 import glob
 import json
@@ -69,9 +70,9 @@ def setup_seeds(config):
 
 def init_inference(args:argparse.ArgumentParser)->tuple:
     logger.info('Initializing Chat')
-    logger.info(vars(args))
     cfg = Config(args)
     setup_seeds(cfg)
+    logger.info(f"CONFIG:\n{cfg}")
 
     model_config = cfg.model_cfg
     model_config.device_8bit = args.gpu_id
@@ -79,8 +80,6 @@ def init_inference(args:argparse.ArgumentParser)->tuple:
     model = model_cls.from_config(model_config).to(device='cuda:{}'.format(args.gpu_id))
     vis_processor_cfg = cfg.datasets_cfg.cc_sbu_align.vis_processor.train
     vis_processor = registry.get_processor_class(vis_processor_cfg.name).from_config(vis_processor_cfg)
-    # chat = ChatInference(model, vis_processor, device='cuda:{}'.format(args.gpu_id),annotate=annotate,conv_rec=3)
-    # logger.info(f"USING DEVICE - {chat.model.device}")
     logger.info('Initialization Finished')
     return model,vis_processor
 
@@ -137,7 +136,10 @@ def model_answer(
 
 def parse_args():
     """
-    python3 inference.py --gpu-id 1 --cfg-path eval_configs/minigpt4_eval.yaml --consistency-qa gpt_evaluation/consistency_qa_raw.json
+    python3 inference.py \
+        --gpu-id 1 \
+        --cfg-path eval_configs/minigpt4_eval.yaml 
+            
     """
     parser = argparse.ArgumentParser(description="Testing")
     parser.add_argument('-cfg-path',"--cfg-path", required=True, help="path to configuration file.")
@@ -169,11 +171,10 @@ def parse_args():
         help="text file of instruction prompts"
     )
     parser.add_argument(
-        '-consistency-qa','--consistency-qa', 
-        type=str,
-        default='/home/tony/MiniGPT-4/gpt_evaluation/consistency_qa_raw.json',
-        help='json of qa pairs', 
-        required=True
+        "--eval_questions", 
+        type=str, 
+        default='prompts/daisee_questions.txt', 
+        help="text file of question prompts"
     )
     args = parser.parse_args()
     return args
@@ -205,6 +206,15 @@ def get_test_labels(
     
     return labels,mapping
 
+def check_string_in_output(
+    output:str, 
+    search_string:str
+)->bool:
+    # Escape special characters in search_string if necessary
+    output,search = re.sub(r'\W', '', output).lower(),re.sub(r'\W', '', search_string).lower()
+    pattern = re.escape(search)
+    match = re.search(pattern, output)
+    return bool(match)
 
 def main()->None:
     args = parse_args()
@@ -217,8 +227,8 @@ def main()->None:
     instruction_pool = prompt.split('\n\n')
 
     question = "\nQuestion: What is the students engagement level?\n"
-    with open(args.consistency_qa,'r') as f:
-        qa_pairs = json.load(f)
+    with open(args.eval_questions,'r') as f:
+        questions = [q for q in f.read().split('\n') if q != question]
 
     labels,mapping = get_test_labels(
         label_path=test_label_path
@@ -236,10 +246,9 @@ def main()->None:
     answers = []
     for i,subject in enumerate(labels['annotations']):
         subject_sample = subject['video_id']
-        instruct_prompt = random.choice(instruction_pool) 
-        instruct_prompt += f"\n\n### Input:\n"
-        
-        questions = qa_pairs[subject_sample]['Q1'],qa_pairs[subject_sample]['Q2']
+        instruct_prompt = random.choice(instruction_pool) + f"\n\n### Input:\n"
+        q2 = random.choice(questions)
+
         target_table[i] = mapping[subject['caption']]
         pred_table[i] = target_table[i]
 
@@ -250,8 +259,9 @@ def main()->None:
             img_list.append(image)
             instruct_prompt +="<img><ImageHere><\img>"# TODO add index number of frame?
 
-        instruct_prompt += question + "\n### Response:\n"
-        
+        instruct_prompt += question + "\n### Response:\n"  
+        logger.info(f"PROMPT 1:\n{instruct_prompt}")
+
         embs,max_new_tokens = embedding_prepare(model, instruct_prompt, img_list)
         inputs = generate_kwargs(embs=embs, stopping_criteria=stopping_criteria,max_new_tokens=max_new_tokens)
         pred = model_answer(model, inputs)
@@ -259,7 +269,7 @@ def main()->None:
         logger.info(f"SUBJECT: {subject_sample}")
         logger.info(f"CAPTION - {subject['caption'].split(' ')[-1].lower()}")
         logger.info(f"OUTPUT - {pred.lower()}")
-        if subject['caption'].split(' ')[-1].lower() not in pred.lower():
+        if not check_string_in_output(pred,subject['caption'].split(' ')[-1]):#subject['caption'].split(' ')[-1].lower() not in pred.lower():
             pred_table[i] = (target_table[i] - 1) % args.classes
         performance = metrics.forward(pred_table[:i + 1],target_table[:i + 1])
         logger.info(f"ACC - {performance['MulticlassAccuracy']}")
@@ -268,6 +278,8 @@ def main()->None:
         logger.info(f"F1 - {performance['MulticlassF1Score']}")
         
         instruct_prompt = instruct_prompt.replace(question,random.choice(questions))
+        logger.info(f"PROMPT 2:\n{instruct_prompt}")
+
         embs,max_new_tokens = embedding_prepare(model, instruct_prompt, img_list)
         inputs = generate_kwargs(embs=embs, stopping_criteria=stopping_criteria,max_new_tokens=max_new_tokens)
         pred_q1 = model_answer(model, inputs)
@@ -275,7 +287,7 @@ def main()->None:
         answers.append({
             "video_id": subject_sample,
             'Q': question.split('Question:')[-1],
-            'Q1':question.split('Question:')[-1],
+            'Q1':q2.split('Question:')[-1],
             "pred": pred,
             'pred1':pred,
             'pred2':pred_q1,
@@ -311,6 +323,12 @@ if __name__ == "__main__":
     incomplete_files: 0                                                                
     All evaluation completed!                                                          
     Average score temporal understanding: 4.3402466367713
+
+    FINAL ACC - 0.5375036001205444
+    FINAL PR - 0.3783494830131531
+    FINAL RE - 0.25030452013015747
+    FINAL F1 - 0.21113687753677368
+    FINAL COUNT ACC - 0.547645739910314
     """
     program = os.path.basename(__file__)
     if os.path.exists(f"logs/{os.path.splitext(program)[0]}.log"):
