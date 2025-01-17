@@ -13,9 +13,9 @@ import json
 import subprocess
 import pandas as pd
 
-import torch
-import torchmetrics
-from torchmetrics.classification import MulticlassAccuracy, MulticlassPrecision, MulticlassRecall,MulticlassF1Score
+# import torch
+# import torchmetrics
+# from torchmetrics.classification import MulticlassAccuracy, MulticlassPrecision, MulticlassRecall,MulticlassF1Score
 
 
 def get_daisee_filtercap(
@@ -62,15 +62,15 @@ def prepare_hf_dataset(
 
     for idx, row in labels.iterrows():
         sample = row[0].replace('.avi','').replace('.mp4','')
-        sample_paths = sorted(glob.glob(os.path.join(outpath,train_test_split,sample[:6],f"{sample}-*.jpg")))
+        sample_paths = sorted(glob.glob(os.path.join(outpath,train_test_split,f"{sample}-*.jpg")))
         for path in sample_paths:
-            if row[2] == 0:
+            if row[1] == 'not-engaged':
                 subprocess.call(['cp',path,os.path.join(outpath,'hf_dataset',train_test_split,'not_engaged')])
-            elif row[2] == 1:
+            elif row[1] == 'barely-engaged':
                 subprocess.call(['cp',path,os.path.join(outpath,'hf_dataset',train_test_split,'barely_engaged')])
-            elif row[2] == 2:
+            elif row[1] == 'engaged':
                 subprocess.call(['cp',path,os.path.join(outpath,'hf_dataset',train_test_split,'engaged')])
-            elif row[2] == 3:
+            elif row[1] == 'highly-engaged':
                 subprocess.call(['cp',path,os.path.join(outpath,'hf_dataset',train_test_split,'highly_engaged')])
     
     return
@@ -84,7 +84,7 @@ def check_string_in_output(
     pattern = re.escape(search)
     match = re.search(pattern, output)
     return bool(match)
-
+'''
 def load_metrics(num_classes:int)->torchmetrics.MetricCollection:
     metrics = torchmetrics.MetricCollection([
         MulticlassAccuracy(num_classes=num_classes, average="micro"),
@@ -133,17 +133,13 @@ def get_acc(
     print(f"FINAL COUNT ACC - {count/inference_samples}")
     metrics.reset()   
     return
-
+'''
 def main()->None:
     # ann_path = '/home/tony/nvme2tb/DAiSEE/Labels/AllLabels.csv'
     test_samples = '/home/tony/nvme2tb/EngageNetFrames/en_test_labels.csv'
     val_samples = '/home/tony/nvme2tb/EngageNetFrames/en_val_labels.csv'
     train_samples = '/home/tony/nvme2tb/EngageNetFrames/en_train_labels.csv'
     train_val_samples = '/home/tony/nvme2tb/EngageNetFrames/en_trainval_labels.csv'
-
-    # test_video_samples = '/home/tony/nvme2tb/DAiSEE/dataset/test/annotations/daisee_engagement_test.json'
-    # val_video_samples = '/home/tony/nvme2tb/DAiSEE/dataset/val/annotations/daisee_engagement_validation.json'
-    # train_video_samples = '/home/tony/nvme2tb/DAiSEE/dataset/train/annotations/daisee_engagement_train.json'  
 
     get_daisee_filtercap(test_samples,"test_filter_cap.json")
     get_daisee_filtercap(val_samples,"val_filter_cap.json")
@@ -155,9 +151,9 @@ def main()->None:
     train_val.to_csv(train_val_samples,index=False)
     get_daisee_filtercap(train_val_samples,"train_val_filter_cap.json")
 
-    prepare_hf_dataset(train_val_samples,'/home/tony/nvme2tb/EngageNetFrames','train')
-    prepare_hf_dataset(val_samples,'/home/tony/nvme2tb/EngageNetFrames','val')
-    prepare_hf_dataset(test_samples,'/home/tony/nvme2tb/EngageNetFrames','test')
+    # prepare_hf_dataset(train_val_samples,'/home/tony/nvme2tb/EngageNetFrames','train')
+    # prepare_hf_dataset(val_samples,'/home/tony/nvme2tb/EngageNetFrames','val')
+    # prepare_hf_dataset(test_samples,'/home/tony/nvme2tb/EngageNetFrames','test')
     # prepare_hf_dataset(train_val_samples,'/home/tony/nvme2tb/EngageNetFrames','Train_Val_frames')
 
 

@@ -20,6 +20,7 @@ from minigpt4.datasets.datasets.coco_vqa_datasets import COCOVQADataset
 from minigpt4.datasets.datasets.ocrvqa_dataset import OCRVQADataset
 from minigpt4.datasets.datasets.coco_caption import COCOCapDataset
 from minigpt4.datasets.datasets.daisee_dataset import DaiseeDataset
+from minigpt4.datasets.datasets.engagenet_datasets import EngageNetDataset
 
 @registry.register_builder("multitask_conversation")
 class MultitaskConversationBuilder(BaseDatasetBuilder):
