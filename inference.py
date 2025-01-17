@@ -306,23 +306,12 @@ def main()->None:
 
 if __name__ == "__main__":
     """
-    /home/tony/MiniGPT-4/results/daisee_inference.json 1784                            
-    completed_files: 1784                                                              
-    incomplete_files: 0                                                                
-    All evaluation completed!                                                          
-    Average score for correctness: 4.244955156950673                                   
-    completed_files: 1784                                                              
-    incomplete_files: 0                                                                
-    All evaluation completed!                                                          
-    Average score for detailed orientation: 4.040919282511211                          
-    completed_files: 1784                                                              
-    incomplete_files: 0                                                                
-    All evaluation completed!                                                          
-    Average score for contextual understanding: 4.286995515695067                      
-    completed_files: 1784                                                              
-    incomplete_files: 0                                                                
-    All evaluation completed!                                                          
-    Average score temporal understanding: 4.3402466367713
+    /home/tony/MiniGPT-4/results/inference.json 1784
+    Average score for correctness: 4.240470852017937
+    Average score for detailed orientation: 3.975896860986547
+    Average score for contextual understanding: 4.230381165919282
+    Average score temporal understanding: 4.176008968609866
+    Average score for consistency: 3.2045964125560538
 
     FINAL ACC - 0.5375036001205444
     FINAL PR - 0.3783494830131531

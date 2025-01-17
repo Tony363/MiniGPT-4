@@ -220,6 +220,7 @@ def main():
         json.dump(combined_contents, json_file)
     print("All evaluation completed!")
 
+    print(json_path,len(combined_contents))
     # Calculate average score
     score_sum = 0
     count = 0

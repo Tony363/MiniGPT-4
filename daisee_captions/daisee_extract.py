@@ -173,15 +173,18 @@ def get_acc(
 def threshold_gpt_eval(
     result_path:str,
 )->None:
+    '''
+    FINAL COUNT ACC - 0.8609865470852018
+    '''
     with open(result_path,'r') as f:
         results = json.load(f)
     total_samples = len(results)
-    score_sum = 0
+    score_above_thres = 0
     for subject in results:
         subject = results[subject]
-        score_sum += subject[0]['score']
+        score_above_thres += int(subject[0]['score'] >= 4)
 
-    print(f"FINAL COUNT ACC - {score_sum/total_samples}")
+    print(f"FINAL COUNT ACC - {score_above_thres/total_samples}")
 
 
 def main()->None:
@@ -221,7 +224,7 @@ def main()->None:
     #     results = json.load(f)
     # get_acc(results)
 
-    threshold_gpt_eval('/home/tony/MiniGPT-4/gpt_evaluation/vicuna_daisee_image/consistency_results.json')
+    threshold_gpt_eval('/home/tony/MiniGPT-4/gpt_evaluation/vicuna_daisee_image_re/correctness_results.json')
 
 if __name__ == "__main__":
     main()
