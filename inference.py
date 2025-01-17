@@ -139,6 +139,13 @@ def parse_args():
     python3 inference.py \
         --gpu-id 1 \
         --cfg-path eval_configs/minigpt4_eval.yaml 
+
+    python3 inference.py \
+        --gpu-id 0 \
+        --cfg-path eval_configs/minigpt4_eval.yaml \
+        --test-dir /home/tony/nvme2tb/EngageNetFrames/test \
+        --test-labels /home/tony/MiniGPT-4/engagenet_captions/test_filter_cap.json \
+        --out-json engagenet_base.json
             
     """
     parser = argparse.ArgumentParser(description="Testing")
@@ -176,6 +183,12 @@ def parse_args():
         default='prompts/daisee_questions.txt', 
         help="text file of question prompts"
     )
+    parser.add_argument(
+        "--out-json", 
+        type=str, 
+        default='inference.json', 
+        help="out json file name"
+    )
     args = parser.parse_args()
     return args
 
@@ -193,11 +206,17 @@ def get_test_labels(
     label_path:str
 )->dict:
     mapping = {
-        'The student is Not-Engaged':0,
-        'The student is Barely-Engaged':1,
-        'The student is Engaged':2,
-        'The student is Highly-Engaged':3
+        'The student is not-engaged':0,
+        'The student is barely-engaged':1,
+        'The student is engaged':2,
+        'The student is highly-engaged':3
     }
+    # mapping = {
+    #     'The student is Not-Engaged':0,
+    #     'The student is Barely-Engaged':1,
+    #     'The student is Engaged':2,
+    #     'The student is Highly-Engaged':3
+    # }
     with open(label_path,'r') as f:
         labels = json.load(f)
 
@@ -253,7 +272,13 @@ def main()->None:
         pred_table[i] = target_table[i]
 
         img_list = []
-        for image_path in sorted(glob.glob(os.path.join(test_dir,subject_sample[:6],f"{subject_sample}-*.jpg"))):
+        image_paths = glob.glob(os.path.join(
+            test_dir,
+            subject_sample[:6] if 'DAiSEE' in test_dir else '',
+            f"{subject_sample}-*.jpg")
+        )
+        # logger.info(f"IMAGE PATHS - {len(image_paths)}")
+        for image_path in sorted(image_paths):
             image = vis_processor(Image.open(image_path).convert("RGB")).to(device='cuda:{}'.format(args.gpu_id))
             image,_ = model.encode_img(image.unsqueeze(0))
             img_list.append(image)
@@ -301,7 +326,7 @@ def main()->None:
     logger.info(f"FINAL RE - {performance['MulticlassRecall']}")
     logger.info(f"FINAL F1 - {performance['MulticlassF1Score']}")
     metrics.reset()
-    with open(f"results/{os.path.splitext(program)[0]}.json", 'w') as f:
+    with open(f"results/{args.out_json}", 'w') as f:
         json.dump(answers, f, indent=4)
 
 if __name__ == "__main__":

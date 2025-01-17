@@ -13,9 +13,9 @@ import json
 import subprocess
 import pandas as pd
 
-# import torch
-# import torchmetrics
-# from torchmetrics.classification import MulticlassAccuracy, MulticlassPrecision, MulticlassRecall,MulticlassF1Score
+import torch
+import torchmetrics
+from torchmetrics.classification import MulticlassAccuracy, MulticlassPrecision, MulticlassRecall,MulticlassF1Score
 
 
 def get_daisee_filtercap(
@@ -84,7 +84,7 @@ def check_string_in_output(
     pattern = re.escape(search)
     match = re.search(pattern, output)
     return bool(match)
-'''
+
 def load_metrics(num_classes:int)->torchmetrics.MetricCollection:
     metrics = torchmetrics.MetricCollection([
         MulticlassAccuracy(num_classes=num_classes, average="micro"),
@@ -98,11 +98,18 @@ def get_acc(
     results:dict,
     classes:int=4
 )->dict:
+    '''
+    FINAL ACC - 0.27432113885879517
+    FINAL PR - 0.31671929359436035
+    FINAL RE - 0.30450940132141113
+    FINAL F1 - 0.260590136051178
+    FINAL COUNT ACC - 0.28307692307692306
+    '''
     mapping = {
-        'The student is Not-Engaged':0,
-        'The student is Barely-Engaged':1,
-        'The student is Engaged':2,
-        'The student is Highly-Engaged':3
+        'The student is Not-Engaged.':0,
+        'The student is Barely-engaged.':1,
+        'The student is Engaged.':2,
+        'The student is Highly-Engaged.':3
     }
     metrics = load_metrics(classes)
 
@@ -111,14 +118,14 @@ def get_acc(
     pred_table,target_table = torch.zeros(inference_samples),torch.zeros(inference_samples)
     count = 0
     for i,sample in enumerate(results):
-        answer,pred = sample['A'],sample['pred']
+        answer,pred = sample['A'],sample['pred'][0]
         count += 1
         target_table[i] = mapping[answer]
         pred_table[i] = target_table[i]
         if not check_string_in_output(pred,answer.split(' ')[-1]):
             pred_table[i] = (target_table[i] - 1) % classes   
             count -= 1
-            print(f"WRONG pred {sample['video_id']}")
+            print(f"WRONG pred {sample['video_name']}")
             print("pred - ",re.sub(r'\W', '', pred).lower())
             print("answer - ",re.sub(r'\W', '', answer.split(' ')[-1]).lower())
             print(re.sub(r'\W', '', answer.split(' ')[-1]).lower() in re.sub(r'\W', '', pred).lower())
@@ -133,34 +140,34 @@ def get_acc(
     print(f"FINAL COUNT ACC - {count/inference_samples}")
     metrics.reset()   
     return
-'''
+
 def main()->None:
     # ann_path = '/home/tony/nvme2tb/DAiSEE/Labels/AllLabels.csv'
-    test_samples = '/home/tony/nvme2tb/EngageNetFrames/en_test_labels.csv'
-    val_samples = '/home/tony/nvme2tb/EngageNetFrames/en_val_labels.csv'
-    train_samples = '/home/tony/nvme2tb/EngageNetFrames/en_train_labels.csv'
-    train_val_samples = '/home/tony/nvme2tb/EngageNetFrames/en_trainval_labels.csv'
+    # test_samples = '/home/tony/nvme2tb/EngageNetFrames/en_test_labels.csv'
+    # val_samples = '/home/tony/nvme2tb/EngageNetFrames/en_val_labels.csv'
+    # train_samples = '/home/tony/nvme2tb/EngageNetFrames/en_train_labels.csv'
+    # train_val_samples = '/home/tony/nvme2tb/EngageNetFrames/en_trainval_labels.csv'
 
-    get_daisee_filtercap(test_samples,"test_filter_cap.json")
-    get_daisee_filtercap(val_samples,"val_filter_cap.json")
-    get_daisee_filtercap(train_samples,"train_filter_cap.json")
+    # get_daisee_filtercap(test_samples,"test_filter_cap.json")
+    # get_daisee_filtercap(val_samples,"val_filter_cap.json")
+    # get_daisee_filtercap(train_samples,"train_filter_cap.json")
 
-    train = pd.read_csv(train_samples,index_col=False)
-    val = pd.read_csv(val_samples,index_col=False)
-    train_val = pd.concat([train,val],axis=0)
-    train_val.to_csv(train_val_samples,index=False)
-    get_daisee_filtercap(train_val_samples,"train_val_filter_cap.json")
+    # train = pd.read_csv(train_samples,index_col=False)
+    # val = pd.read_csv(val_samples,index_col=False)
+    # train_val = pd.concat([train,val],axis=0)
+    # train_val.to_csv(train_val_samples,index=False)
+    # get_daisee_filtercap(train_val_samples,"train_val_filter_cap.json")
 
     # prepare_hf_dataset(train_val_samples,'/home/tony/nvme2tb/EngageNetFrames','train')
     # prepare_hf_dataset(val_samples,'/home/tony/nvme2tb/EngageNetFrames','val')
     # prepare_hf_dataset(test_samples,'/home/tony/nvme2tb/EngageNetFrames','test')
-    prepare_hf_dataset(train_val_samples,'/home/tony/nvme2tb/EngageNetFrames','train_val')
+    # prepare_hf_dataset(train_val_samples,'/home/tony/nvme2tb/EngageNetFrames','train_val')
 
 
-    # results_path = '/home/tony/MiniGPT-4/results/daisee_inference.json'
-    # with open(results_path,'r') as f:
-    #     results = json.load(f)
-    # get_acc(results)
+    results_path = '/home/tony/MiniGPT4-video/gpt_evaluation/mistral_base_test_config_eval.json'
+    with open(results_path,'r') as f:
+        results = json.load(f)
+    get_acc(results)
 
 if __name__ == "__main__":
     main()
