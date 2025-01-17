@@ -154,7 +154,7 @@ def main()->None:
     # prepare_hf_dataset(train_val_samples,'/home/tony/nvme2tb/EngageNetFrames','train')
     # prepare_hf_dataset(val_samples,'/home/tony/nvme2tb/EngageNetFrames','val')
     # prepare_hf_dataset(test_samples,'/home/tony/nvme2tb/EngageNetFrames','test')
-    # prepare_hf_dataset(train_val_samples,'/home/tony/nvme2tb/EngageNetFrames','Train_Val_frames')
+    prepare_hf_dataset(train_val_samples,'/home/tony/nvme2tb/EngageNetFrames','train_val')
 
 
     # results_path = '/home/tony/MiniGPT-4/results/daisee_inference.json'

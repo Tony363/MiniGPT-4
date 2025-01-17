@@ -566,7 +566,6 @@ class DaiseeBuilder(BaseDatasetBuilder):
             vis_root=build_info.vis_root,
             instruct_prompts=build_info.prompts,
             question_prompts=build_info.questions,
-            emotion=build_info.emotion
         )
 
         return datasets
@@ -603,7 +602,6 @@ class EngageNetBuilder(BaseDatasetBuilder):
             vis_root=build_info.vis_root,
             instruct_prompts=build_info.prompts,
             question_prompts=build_info.questions,
-            emotion=build_info.emotion
         )
 
         return datasets

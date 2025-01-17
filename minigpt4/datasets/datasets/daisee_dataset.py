@@ -27,7 +27,6 @@ class DaiseeDataset(BaseDataset,__DisplMixin):
         text_processor, 
         vis_root, 
         ann_paths,
-        emotion:str,
         instruct_prompts=None,
         question_prompts=None,
     ):

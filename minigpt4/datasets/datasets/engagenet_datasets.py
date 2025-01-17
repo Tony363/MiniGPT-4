@@ -27,7 +27,6 @@ class EngageNetDataset(BaseDataset,__DisplMixin):
         text_processor, 
         vis_root, 
         ann_paths,
-        emotion:str,
         instruct_prompts=None,
         question_prompts=None,
     ):
@@ -50,9 +49,9 @@ class EngageNetDataset(BaseDataset,__DisplMixin):
                 self.instruction_pool = file.read().split('\n\n')
 
         exist_annotation = []
-        for ann in self.annotation[emotion]:
-            subject,exists = ann['video_id'][:6],True
-            for image_path in sorted(glob.glob(os.path.join(self.vis_root,subject,f"{ann['video_id']}-*.jpg"))):
+        for ann in self.annotation:
+            subject,exists = ann['video_id'],True
+            for image_path in sorted(glob.glob(os.path.join(self.vis_root,f"{ann['video_id']}-*.jpg"))):
                 if not os.path.exists(image_path):
                     exists = False
             if exists:
@@ -64,11 +63,11 @@ class EngageNetDataset(BaseDataset,__DisplMixin):
         index:int
     )->dict:
         ann = self.annotation[index]
-        subject = ann['video_id'][:6]
+        subject = ann['video_id']
         instruction,images = random.choice(self.instruction_pool),[]
         instruction += f"\n\n### Input:\n<img><ImageHere><\img>\n" 
 
-        for image_path in sorted(glob.glob(os.path.join(self.vis_root,subject,f"{ann['video_id']}-*.jpg"))):
+        for image_path in sorted(glob.glob(os.path.join(self.vis_root,f"{ann['video_id']}-*.jpg"))):
             image = self.vis_processor(Image.open(image_path).convert("RGB"))
             images.append(image)
 

@@ -32,41 +32,12 @@ def get_daisee_filtercap(
         2: 'Engaged',
         3: 'Highly-Engaged'
     }
-    # frustration_map = {
-    #     0: 'Not-Frustrated',
-    #     1: 'Barely-Frustrated',
-    #     2: 'Frustrated',
-    #     3: 'Highly-Frustrated'
-    # }
-    # confusion_map = {
-    #     0: 'Not-Confused',
-    #     1: 'Barely-Confused',
-    #     2: 'Confused',
-    #     3: 'Highly-Confused'
-    # }
-    # bored_map = {
-    #     0: 'Not-Bored',
-    #     1: 'Barely-Bored',
-    #     2: 'Bored',
-    #     3: 'Highly-Bored'
-    # }
+
     for idx, row in df.iterrows():
         labels['annotations'].append({
             'video_id':row[0].replace('.avi','').replace('.mp4',''),
             'caption': f"The student is {engaged_map[row[2]]}"
         })
-        # labels['annotations']['frustration'].append({
-        #     'video_id':row[0].replace('.avi','').replace('.mp4',''),
-        #     'caption': f"The student is {frustration_map[row[-1]]}"
-        # })
-        # labels['annotations']['confusion'].append({
-        #     'video_id':row[0].replace('.avi','').replace('.mp4',''),
-        #     'caption': f"The student is {confusion_map[row[-2]]}"
-        # })
-        # labels['annotations']['boredom'].append({
-        #     'video_id':row[0].replace('.avi','').replace('.mp4',''),
-        #     'caption': f"The student is {bored_map[row[-3]]}"
-        # })
 
     with open(os.path.join("/home/tony/MiniGPT-4/daisee_captions",outfile), 'w') as f:
         json.dump(labels,f)
@@ -199,6 +170,20 @@ def get_acc(
     metrics.reset()   
     return
 
+def threshold_gpt_eval(
+    result_path:str,
+)->None:
+    with open(result_path,'r') as f:
+        results = json.load(f)
+    total_samples = len(results)
+    score_sum = 0
+    for subject in results:
+        subject = results[subject]
+        score_sum += subject[0]['score']
+
+    print(f"FINAL COUNT ACC - {score_sum/total_samples}")
+
+
 def main()->None:
     # ann_path = '/home/tony/nvme2tb/DAiSEE/Labels/AllLabels.csv'
     # test_samples = '/home/tony/nvme2tb/DAiSEE/Labels/TestLabels.csv'
@@ -231,10 +216,12 @@ def main()->None:
     # prepare_video_daisee(train_video_samples)
     # prepare_video_daisee(train_video_samples,val_video_samples)
 
-    results_path = '/home/tony/MiniGPT-4/results/daisee_inference.json'
-    with open(results_path,'r') as f:
-        results = json.load(f)
-    get_acc(results)
+    # results_path = '/home/tony/MiniGPT-4/results/daisee_inference.json'
+    # with open(results_path,'r') as f:
+    #     results = json.load(f)
+    # get_acc(results)
+
+    threshold_gpt_eval('/home/tony/MiniGPT-4/gpt_evaluation/vicuna_daisee_image/consistency_results.json')
 
 if __name__ == "__main__":
     main()
