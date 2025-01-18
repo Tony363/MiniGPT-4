@@ -350,7 +350,11 @@ if __name__ == "__main__":
     [inference.py|INFO|2025-01-17] FINAL RE - 0.026909854263067245
     [inference.py|INFO|2025-01-17] FINAL F1 - 0.02992699295282364
 
-
+    MiniGPT-4 finetune engagenet
+    [inference.py|INFO|2025-01-17] FINAL ACC - 0.38917461037635803                                                                                                                                             
+    [inference.py|INFO|2025-01-17] FINAL PR - 0.3033820390701294                                                                                                                                               
+    [inference.py|INFO|2025-01-17] FINAL RE - 0.33527135848999023                                                                                                                                              
+    [inference.py|INFO|2025-01-17] FINAL F1 - 0.2853012681007385                                                                                                                                               
     """
     program = os.path.basename(__file__)
     if os.path.exists(f"logs/{os.path.splitext(program)[0]}.log"):
