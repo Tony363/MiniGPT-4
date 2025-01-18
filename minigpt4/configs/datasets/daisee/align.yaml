@@ -10,10 +10,9 @@ datasets:
 
     build_info: # this is the information needed to build the dataset
       # Be careful not to append minus sign (-) before split to avoid itemizing
-      ann_paths: [daisee_captions/train_val_filter_cap.json] # list of paths to annotation files
-      vis_root: /home/tony/nvme2tb/DAiSEE_Frames/Train_Val_frames
+      ann_paths: [/mnt/nvme2tb/ieee_fer_dpo/daisee_captions/train_val_filter_cap.json] # list of paths to annotation files
+      vis_root: /mnt/nvme2tb/DAiSEE_Frames/Train_Val_frames
       model_name: 'pretrain_vicuna0' # Language Model Name (available: llama2, mistral)
-      storage: /home/tony/MiniGPT-4/daisee_captions
-      prompts: /home/tony/MiniGPT-4/prompts/instruction_align.txt
-      questions: /home/tony/MiniGPT-4/prompts/daisee_questions.txt
-      emotion: 'frustration' # frustration, engagement, confusion,boredom
+      storage: /mnt/nvme2tb/ieee_fer_dpo/daisee_captions
+      prompts: /mnt/nvme2tb/ieee_fer_dpo/prompts/instruction_align.txt
+      questions: /mnt/nvme2tb/ieee_fer_dpo/prompts/daisee_questions.txt

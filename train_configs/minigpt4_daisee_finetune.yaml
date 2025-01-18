@@ -5,7 +5,7 @@ model:
   end_sym: "" # "###"
   prompt_path: "prompts/alignment.txt"
   prompt_template: '###Human: {} ###Assistant: '
-  ckpt: "prerained_minigpt4_7b_vicuna.pth"
+  ckpt: "/mnt/nvme2tb/ieee_fer_dpo/prerained_minigpt4_7b_vicuna.pth"
 
 
 datasets:

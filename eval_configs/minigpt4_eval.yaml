@@ -6,7 +6,7 @@ model:
   low_resource: True
   prompt_template: '###Human: {} ###Assistant: '
   # ckpt: 'minigpt4/output/minigpt4_stage2_daisee_trainval/20250104130/checkpoint_39.pth'
-  ckpt: '/home/tony/MiniGPT-4/prerained_minigpt4_7b_vicuna.pth'
+  ckpt: '/mnt/nvme2tb/prerained_minigpt4_7b_vicuna.pth'
   # ckpt: /home/tony/MiniGPT-4/minigpt4/output/minigpt4_stage2_engagenet_finetune/20250116234/checkpoint_39.pth
 
 datasets:
