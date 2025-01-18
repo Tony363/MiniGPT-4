@@ -343,6 +343,14 @@ if __name__ == "__main__":
     FINAL RE - 0.25030452013015747
     FINAL F1 - 0.21113687753677368
     FINAL COUNT ACC - 0.547645739910314
+
+    MiniGPT-4 base engagenet
+    [inference.py|INFO|2025-01-17] FINAL ACC - 0.03188373148441315
+    [inference.py|INFO|2025-01-17] FINAL PR - 0.04356253519654274
+    [inference.py|INFO|2025-01-17] FINAL RE - 0.026909854263067245
+    [inference.py|INFO|2025-01-17] FINAL F1 - 0.02992699295282364
+
+
     """
     program = os.path.basename(__file__)
     if os.path.exists(f"logs/{os.path.splitext(program)[0]}.log"):
