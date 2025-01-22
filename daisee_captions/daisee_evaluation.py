@@ -45,13 +45,13 @@ def init_logger(
 
 def parse_args():
     '''
-    python3 daisee_evaluation.py --result-path /home/tony/nvme2tb/ieee_fer_dpo/minigpt4_eval_outputs/daisee_inference.json
     python3 daisee_evaluation.py --result-path /home/tony/nvme2tb/ieee_fer_dpo/minigpt4_eval_outputs/daisee_base.json
-    python3 daisee_evaluation.py --result-path /home/tony/nvme2tb/ieee_fer_dpo/minigpt4_eval_outputs/engagenet_base.json
-    python3 daisee_evaluation.py --result-path /home/tony/nvme2tb/ieee_fer_dpo/minigpt4_eval_outputs/engagenet_finetune.json
-    
+    python3 daisee_evaluation.py --result-path /home/tony/nvme2tb/ieee_fer_dpo/minigpt4_eval_outputs/daisee_inference.json
     python3 daisee_evaluation.py --result-path /home/tony/nvme2tb/ieee_fer_dpo/minigpt4video_eval_outputs/mistral_daisee_base_config_eval.json
     python3 daisee_evaluation.py --result-path /home/tony/nvme2tb/ieee_fer_dpo/minigpt4video_eval_outputs/mistral_daisee_test_config_eval.json
+    
+    python3 daisee_evaluation.py --result-path /home/tony/nvme2tb/ieee_fer_dpo/minigpt4_eval_outputs/engagenet_base.json
+    python3 daisee_evaluation.py --result-path /home/tony/nvme2tb/ieee_fer_dpo/minigpt4_eval_outputs/engagenet_finetune.json
     python3 daisee_evaluation.py --result-path /home/tony/nvme2tb/ieee_fer_dpo/minigpt4video_eval_outputs/mistral_engagenet_base_config_eval.json
     python3 daisee_evaluation.py --result-path /home/tony/nvme2tb/ieee_fer_dpo/minigpt4video_eval_outputs/mistral_engagenet_finetune_config_eval.json
     '''
@@ -232,13 +232,6 @@ def get_acc(
             count -= 1
         performance = metrics.forward(pred_table[:i + 1],target_table[:i + 1])
         json_results[sample[id_key]] = (parsed_json['pred'],answer.split(' ')[-1].lower())
-    
-    # /home/tony/nvme2tb/ieee_fer_dpo/minigpt4_eval_outputs/daisee_inference.json
-    outpath = args.resut_path.split('/')
-    if not os.path.exists(os.path.join(outpath[:-2],'structured')):
-        os.mkdir(os.path.join(outpath[:-2],'structured'))
-    with open(os.path.join(outpath[:-2],'structured',outpath[-1]),'w') as f:
-        json.dump(json_results,f,indent=4)
 
     performance = metrics.compute()
     logger.info(f"Key word ACC - {performance['MulticlassAccuracy']}")
@@ -247,7 +240,7 @@ def get_acc(
     logger.info(f"Key word F1 - {performance['MulticlassF1Score']}")
     logger.info(f"Parsed ACC - {count/inference_samples}")
     metrics.reset()   
-    return
+    return json_results
 
 
 def threshold_gpt_eval(
@@ -273,8 +266,14 @@ def main()->None:
 
     with open(result_path,'r') as f:
         results = json.load(f)
-    get_acc(results,video='video' in args.result_path)
-    
+    json_result = get_acc(results,video='video' in args.result_path)
+
+    # /home/tony/nvme2tb/ieee_fer_dpo/minigpt4_eval_outputs/daisee_inference.json
+    outpath = args.resut_path.split('/')
+    if not os.path.exists(os.path.join(outpath[:-2],'structured')):
+        os.mkdir(os.path.join(outpath[:-2],'structured'))
+    with open(os.path.join(outpath[:-2],'structured',outpath[-1]),'w') as f:
+        json.dump(json_results,f,indent=4)
 
 
 if __name__ == "__main__":
