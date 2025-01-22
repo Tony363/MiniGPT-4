@@ -297,12 +297,45 @@ def main()->None:
 
 if __name__ == "__main__":
     """
-    daisee_inference.json
+    daisee_base.json
+    [daisee_evaluation.py|INFO|2025-01-22] Key word ACC - 0.03365866467356682
+    [daisee_evaluation.py|INFO|2025-01-22] Key word PR - 0.22113727033138275
+    [daisee_evaluation.py|INFO|2025-01-22] Key word RE - 0.018307646736502647
+    [daisee_evaluation.py|INFO|2025-01-22] Key word F1 - 0.023643970489501953
+    [daisee_evaluation.py|INFO|2025-01-22] Structure ACC - 0.0004949065041728318
+    [daisee_evaluation.py|INFO|2025-01-22] Structure PR - 0.05153021216392517
+    [daisee_evaluation.py|INFO|2025-01-22] Structure RE - 0.00030399265233427286
+    [daisee_evaluation.py|INFO|2025-01-22] Structure F1 - 0.0006044196197763085
+
+    minigpt4_eval_outputs/daisee_inference.json
     [daisee_evaluation.py|INFO|2025-01-22] Key word ACC - 0.5278856158256531
     [daisee_evaluation.py|INFO|2025-01-22] Key word PR - 0.37611472606658936
     [daisee_evaluation.py|INFO|2025-01-22] Key word RE - 0.24560368061065674
     [daisee_evaluation.py|INFO|2025-01-22] Key word F1 - 0.2070852369070053
-    [daisee_evaluation.py|INFO|2025-01-22] Parsed ACC - 0.8772421524663677
+    [daisee_evaluation.py|INFO|2025-01-22] Structure ACC - 0.8732907772064209
+    [daisee_evaluation.py|INFO|2025-01-22] Structure PR - 0.5551599264144897
+    [daisee_evaluation.py|INFO|2025-01-22] Structure RE - 0.6295545101165771
+    [daisee_evaluation.py|INFO|2025-01-22] Structure F1 - 0.5669029355049133
+
+    minigpt4_eval_outputs/engagenet_base.json
+    [daisee_evaluation.py|INFO|2025-01-22] Key word ACC - 0.03188373148441315
+    [daisee_evaluation.py|INFO|2025-01-22] Key word PR - 0.04356253519654274
+    [daisee_evaluation.py|INFO|2025-01-22] Key word RE - 0.026909854263067245
+    [daisee_evaluation.py|INFO|2025-01-22] Key word F1 - 0.02992699295282364
+    [daisee_evaluation.py|INFO|2025-01-22] Structure ACC - 0.0
+    [daisee_evaluation.py|INFO|2025-01-22] Structure PR - 0.0
+    [daisee_evaluation.py|INFO|2025-01-22] Structure RE - 0.0
+    [daisee_evaluation.py|INFO|2025-01-22] Structure F1 - 0.0
+
+    mistral_engagenet_finetune_config_eval.json
+    [daisee_evaluation.py|INFO|2025-01-22] Key word ACC - 0.6407010555267334
+    [daisee_evaluation.py|INFO|2025-01-22] Key word PR - 0.723282516002655
+    [daisee_evaluation.py|INFO|2025-01-22] Key word RE - 0.6108910441398621
+    [daisee_evaluation.py|INFO|2025-01-22] Key word F1 - 0.5911238789558411
+    [daisee_evaluation.py|INFO|2025-01-22] Structure ACC - 0.6389205455780029
+    [daisee_evaluation.py|INFO|2025-01-22] Structure PR - 0.5707334280014038
+    [daisee_evaluation.py|INFO|2025-01-22] Structure RE - 0.5778033137321472
+    [daisee_evaluation.py|INFO|2025-01-22] Structure F1 - 0.5568059682846069
 
     """
     program = os.path.basename(__file__)
