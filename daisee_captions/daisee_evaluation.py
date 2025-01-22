@@ -46,6 +46,14 @@ def init_logger(
 def parse_args():
     '''
     python3 daisee_evaluation.py --result-path /home/tony/nvme2tb/ieee_fer_dpo/minigpt4_eval_outputs/daisee_inference.json
+    python3 daisee_evaluation.py --result-path /home/tony/nvme2tb/ieee_fer_dpo/minigpt4_eval_outputs/daisee_base.json
+    python3 daisee_evaluation.py --result-path /home/tony/nvme2tb/ieee_fer_dpo/minigpt4_eval_outputs/engagenet_base.json
+    python3 daisee_evaluation.py --result-path /home/tony/nvme2tb/ieee_fer_dpo/minigpt4_eval_outputs/engagenet_finetune.json
+    
+    python3 daisee_evaluation.py --result-path /home/tony/nvme2tb/ieee_fer_dpo/minigpt4video_eval_outputs/mistral_daisee_base_config_eval.json
+    python3 daisee_evaluation.py --result-path /home/tony/nvme2tb/ieee_fer_dpo/minigpt4video_eval_outputs/mistral_daisee_test_config_eval.json
+    python3 daisee_evaluation.py --result-path /home/tony/nvme2tb/ieee_fer_dpo/minigpt4video_eval_outputs/mistral_engagenet_base_config_eval.json
+    python3 daisee_evaluation.py --result-path /home/tony/nvme2tb/ieee_fer_dpo/minigpt4video_eval_outputs/mistral_engagenet_finetune_config_eval.json
     '''
     parser = argparse.ArgumentParser(description="Testing")
     parser.add_argument(
@@ -128,6 +136,7 @@ JSON:
     "pred": "Highly-Engaged"
 }}
 """
+    message_content = ''
     for att in range(retries):
         try:
             response = client.chat.completions.create(
@@ -155,7 +164,7 @@ JSON:
             continue
 
     logger.info(f"FAILED TO PARSE {retries} TIMES")
-    return {'pred':''}
+    return {'pred':message_content}
 
 def check_string_in_output(
     output:str, 
@@ -180,38 +189,56 @@ def load_metrics(num_classes:int)->torchmetrics.MetricCollection:
 
 def get_acc(
     results:dict,
-    classes:int=4
+    classes:int=4,
+    video:bool=False
 )->dict:
+    # mapping = {
+    #     'The student is Not-Engaged':0,
+    #     'The student is Barely-Engaged':1,
+    #     'The student is Engaged':2,
+    #     'The student is Highly-Engaged':3
+    # }
     mapping = {
-        'The student is Not-Engaged':0,
-        'The student is Barely-Engaged':1,
-        'The student is Engaged':2,
-        'The student is Highly-Engaged':3
+        'The student is not-engaged':0,
+        'The student is barely-engaged':1,
+        'The student is engaged':2,
+        'The student is highly-engaged':3
     }
     metrics = load_metrics(classes)
 
     inference_samples = len(results)
     logger.info(f"INFERENCE SAMPLES - {inference_samples}")
     pred_table,target_table = torch.zeros(inference_samples),torch.zeros(inference_samples)
-    count = 0
+    count, json_results = 0,{}
+    id_key = 'video_name' if video else 'video_id'
     for i,sample in enumerate(results):
         answer,pred = sample['A'],sample['pred']
+        pred = pred[0] if video else pred
         count += 1
         target_table[i] = mapping[answer]
         pred_table[i] = target_table[i]
 
         if not check_string_in_output(pred,answer.split(' ')[-1]):
             pred_table[i] = (target_table[i] - 1) % classes   
-            logger.info(f"WRONG pred {sample['video_id']}")
-        
+            logger.info(f"WRONG pred {sample[id_key]}")
+
         parsed_json = openai_parser(pred)
         logger.info("Parsed JSON:")
         logger.info(json.dumps(parsed_json, indent=4))
         logger.info(f'\nA:{answer.split(" ")[-1]}\nP:{parsed_json["pred"]}')
         
-        if parsed_json['pred'].lower() not in answer.split(' ')[-1].lower():
+        if not isinstance(parsed_json['pred'],str) or\
+             parsed_json['pred'].lower() not in answer.split(' ')[-1].lower() :
             count -= 1
         performance = metrics.forward(pred_table[:i + 1],target_table[:i + 1])
+        json_results[sample[id_key]] = (parsed_json['pred'],answer.split(' ')[-1].lower())
+    
+    # /home/tony/nvme2tb/ieee_fer_dpo/minigpt4_eval_outputs/daisee_inference.json
+    outpath = args.resut_path.split('/')
+    if not os.path.exists(os.path.join(outpath[:-2],'structured')):
+        os.mkdir(os.path.join(outpath[:-2],'structured'))
+    with open(os.path.join(outpath[:-2],'structured',outpath[-1]),'w') as f:
+        json.dump(json_results,f,indent=4)
 
     performance = metrics.compute()
     logger.info(f"Key word ACC - {performance['MulticlassAccuracy']}")
@@ -246,11 +273,20 @@ def main()->None:
 
     with open(result_path,'r') as f:
         results = json.load(f)
-    get_acc(results)
+    get_acc(results,video='video' in args.result_path)
     
 
 
 if __name__ == "__main__":
+    """
+    daisee_inference.json
+    [daisee_evaluation.py|INFO|2025-01-22] Key word ACC - 0.5278856158256531
+    [daisee_evaluation.py|INFO|2025-01-22] Key word PR - 0.37611472606658936
+    [daisee_evaluation.py|INFO|2025-01-22] Key word RE - 0.24560368061065674
+    [daisee_evaluation.py|INFO|2025-01-22] Key word F1 - 0.2070852369070053
+    [daisee_evaluation.py|INFO|2025-01-22] Parsed ACC - 0.8772421524663677
+
+    """
     program = os.path.basename(__file__)
     if os.path.exists(f"logs/{os.path.splitext(program)[0]}.log"):
         os.remove(f"logs/{os.path.splitext(program)[0]}.log")
@@ -258,16 +294,3 @@ if __name__ == "__main__":
     client = OpenAI()
     main()
 
-    # sentences = [
-    #     "The student is Not-Engaged.",
-    #     "The student is Barely-Engaged.",
-    #     "The student is Engaged.",
-    #     "The student is Highly-Engaged."
-    # ]
-
-    # for sentence in sentences:
-    #     logger.info(f"Sentence: {sentence}")
-    #     parsed = openai_parser(sentence)
-    #     logger.info("Parsed JSON:")
-    #     logger.info(json.dumps(parsed, indent=4))
-    #     logger.info("-" * 50)
