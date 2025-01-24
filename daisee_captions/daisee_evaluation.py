@@ -45,15 +45,15 @@ def init_logger(
 
 def parse_args():
     '''
-    python3 daisee_evaluation.py --result-path /home/tony/nvme2tb/ieee_fer_dpo/minigpt4_eval_outputs/daisee_base.json
-    python3 daisee_evaluation.py --result-path /home/tony/nvme2tb/ieee_fer_dpo/minigpt4_eval_outputs/daisee_inference.json
-    python3 daisee_evaluation.py --result-path /home/tony/nvme2tb/ieee_fer_dpo/minigpt4video_eval_outputs/mistral_daisee_base_config_eval.json
-    python3 daisee_evaluation.py --result-path /home/tony/nvme2tb/ieee_fer_dpo/minigpt4video_eval_outputs/mistral_daisee_test_config_eval.json
+    python3 daisee_evaluation.py --result-path /home/tony/nvme2tb/ieee_fer_dpo/minigpt4_eval_outputs/daisee_base.json --retries 5
+    python3 daisee_evaluation.py --result-path /home/tony/nvme2tb/ieee_fer_dpo/minigpt4_eval_outputs/daisee_inference.json --retries 5
+    python3 daisee_evaluation.py --result-path /home/tony/nvme2tb/ieee_fer_dpo/minigpt4video_eval_outputs/mistral_daisee_base_config_eval.json --retries 5
+    python3 daisee_evaluation.py --result-path /home/tony/nvme2tb/ieee_fer_dpo/minigpt4video_eval_outputs/mistral_daisee_test_config_eval.json --retries 5  
     
-    python3 daisee_evaluation.py --result-path /home/tony/nvme2tb/ieee_fer_dpo/minigpt4_eval_outputs/engagenet_base.json
-    python3 daisee_evaluation.py --result-path /home/tony/nvme2tb/ieee_fer_dpo/minigpt4_eval_outputs/engagenet_finetune.json
-    python3 daisee_evaluation.py --result-path /home/tony/nvme2tb/ieee_fer_dpo/minigpt4video_eval_outputs/mistral_engagenet_base_config_eval.json
-    python3 daisee_evaluation.py --result-path /home/tony/nvme2tb/ieee_fer_dpo/minigpt4video_eval_outputs/mistral_engagenet_finetune_config_eval.json
+    python3 daisee_evaluation.py --result-path /home/tony/nvme2tb/ieee_fer_dpo/minigpt4_eval_outputs/engagenet_base.json --retries 5
+    python3 daisee_evaluation.py --result-path /home/tony/nvme2tb/ieee_fer_dpo/minigpt4_eval_outputs/engagenet_finetune.json --retries 5
+    python3 daisee_evaluation.py --result-path /home/tony/nvme2tb/ieee_fer_dpo/minigpt4video_eval_outputs/mistral_engagenet_base_config_eval.json --retries 5
+    python3 daisee_evaluation.py --result-path /home/tony/nvme2tb/ieee_fer_dpo/minigpt4video_eval_outputs/mistral_engagenet_finetune_config_eval.json --retries 5
     '''
     parser = argparse.ArgumentParser(description="Testing")
     parser.add_argument(
@@ -62,7 +62,22 @@ def parse_args():
         required=True, 
         help="path to result file."
     )
-  
+    parser.add_argument(
+        '-retries',
+        "--retries", 
+        required=False,
+        type=int,
+        default=3, 
+        help="number of retries for openai api."
+    )    
+    parser.add_argument(
+        '-classes',
+        "--classes", 
+        required=False,
+        type=int,
+        default=4, 
+        help="number of classes."
+    )
     args = parser.parse_args()
     return args
 
@@ -106,34 +121,36 @@ Given the following sentence:
 "{sentence}"
 
 Parse it into a well-structured JSON object with appropriate keys and values.
-
 Ensure the JSON is valid and follows proper syntax.
 
+The only output that matters are the values for the key "pred".
+The only possible values for the key "pred" are "not-engaged", "barely-engaged", "engaged", and "highly-engaged".
+
 Example 1:
-Sentence: "The student is Not-Engaged."
-JSON:
+User: "The student is Not-Engaged."
+OUTPUT:
 {{
     "pred": "Not-Engaged"
 }}
 
 Example 2:
-Sentence: "The student is Barely-Engaged."
-JSON:
+User: "The student is Barely-Engaged."
+OUTPUT:
 {{
     "pred": "Barely-Engaged"
 }}
 
 Example 3:
-Sentence: "The student is Engaged."
-JSON:
+User: "The student is Engaged."
+OUTPUT:
 {{
     "pred": "Engaged"
 }}
 
 Example 4:
-Sentence: "The student is Highly-Engaged."
-JSON:
-{{s
+User: "The student is Highly-Engaged."
+OUTPUT:
+{{
     "pred": "Highly-Engaged"
 }}
 """
@@ -190,6 +207,7 @@ def load_metrics(num_classes:int)->torchmetrics.MetricCollection:
 
 def get_acc(
     results:dict,
+    retries:int,
     classes:int=4,
     video:bool=False
 )->dict:
@@ -228,7 +246,7 @@ def get_acc(
             logger.info(f"WRONG pred {sample[id_key]}")
         metrics_keyword.forward(pred_keyword[:i + 1],target_keyword[:i + 1])
 
-        parsed_json = openai_parser(pred)
+        parsed_json = openai_parser(pred,retries=retries)
         logger.info("Parsed JSON:")
         logger.info(json.dumps(parsed_json, indent=4))
         logger.info(f'\nA:{answer.split(" ")[-1]}\nP:{parsed_json["pred"]}')
@@ -284,7 +302,12 @@ def main()->None:
 
     with open(result_path,'r') as f:
         results = json.load(f)
-    json_result = get_acc(results,video='video' in args.result_path)
+    json_result = get_acc(
+        results=results,
+        retries=args.retries,
+        classes=args.classes,
+        video='video' in args.result_path
+    )
 
     # /home/tony/nvme2tb/ieee_fer_dpo/minigpt4_eval_outputs/daisee_inference.json
     outpath = args.result_path.split('/')
@@ -297,7 +320,7 @@ def main()->None:
 
 if __name__ == "__main__":
     """
-    daisee_base.json
+    minigpt4_eval_outputs/daisee_base.json
     [daisee_evaluation.py|INFO|2025-01-22] Key word ACC - 0.03365866467356682
     [daisee_evaluation.py|INFO|2025-01-22] Key word PR - 0.22113727033138275
     [daisee_evaluation.py|INFO|2025-01-22] Key word RE - 0.018307646736502647
@@ -317,6 +340,26 @@ if __name__ == "__main__":
     [daisee_evaluation.py|INFO|2025-01-22] Structure RE - 0.6295545101165771
     [daisee_evaluation.py|INFO|2025-01-22] Structure F1 - 0.5669029355049133
 
+    minigpt4video_eval_outputs/mistral_daisee_base_config_eval.json
+    [daisee_evaluation.py|INFO|2025-01-22] Key word ACC - 0.5688818097114563
+    [daisee_evaluation.py|INFO|2025-01-22] Key word PR - 0.4028744101524353
+    [daisee_evaluation.py|INFO|2025-01-22] Key word RE - 0.28821173310279846
+    [daisee_evaluation.py|INFO|2025-01-22] Key word F1 - 0.3005830943584442
+    [daisee_evaluation.py|INFO|2025-01-22] Structure ACC - 0.1760372370481491
+    [daisee_evaluation.py|INFO|2025-01-22] Structure PR - 0.2872813940048218
+    [daisee_evaluation.py|INFO|2025-01-22] Structure RE - 0.18117275834083557
+    [daisee_evaluation.py|INFO|2025-01-22] Structure F1 - 0.15202456712722778
+
+    minigpt4video_eval_outputs/mistral_daisee_test_config_eval.json
+    [daisee_evaluation.py|INFO|2025-01-22] Key word ACC - 0.5688818097114563
+    [daisee_evaluation.py|INFO|2025-01-22] Key word PR - 0.4028744101524353
+    [daisee_evaluation.py|INFO|2025-01-22] Key word RE - 0.28821173310279846
+    [daisee_evaluation.py|INFO|2025-01-22] Key word F1 - 0.3005830943584442
+    [daisee_evaluation.py|INFO|2025-01-22] Structure ACC - 0.1793043613433838
+    [daisee_evaluation.py|INFO|2025-01-22] Structure PR - 0.28871282935142517
+    [daisee_evaluation.py|INFO|2025-01-22] Structure RE - 0.18288034200668335
+    [daisee_evaluation.py|INFO|2025-01-22] Structure F1 - 0.15410900115966797
+
     minigpt4_eval_outputs/engagenet_base.json
     [daisee_evaluation.py|INFO|2025-01-22] Key word ACC - 0.03188373148441315
     [daisee_evaluation.py|INFO|2025-01-22] Key word PR - 0.04356253519654274
@@ -327,7 +370,27 @@ if __name__ == "__main__":
     [daisee_evaluation.py|INFO|2025-01-22] Structure RE - 0.0
     [daisee_evaluation.py|INFO|2025-01-22] Structure F1 - 0.0
 
-    mistral_engagenet_finetune_config_eval.json
+    minigpt4_eval_outputs/engagenet_finetune.json
+    [daisee_evaluation.py|INFO|2025-01-22] Key word ACC - 0.38917461037635803
+    [daisee_evaluation.py|INFO|2025-01-22] Key word PR - 0.303382009267807
+    [daisee_evaluation.py|INFO|2025-01-22] Key word RE - 0.33527135848999023
+    [daisee_evaluation.py|INFO|2025-01-22] Key word F1 - 0.2853012681007385
+    [daisee_evaluation.py|INFO|2025-01-22] Structure ACC - 0.005896049086004496
+    [daisee_evaluation.py|INFO|2025-01-22] Structure PR - 0.007667601108551025
+    [daisee_evaluation.py|INFO|2025-01-22] Structure RE - 0.0030667586252093315
+    [daisee_evaluation.py|INFO|2025-01-22] Structure F1 - 0.004381198901683092
+
+    minigpt4video_eval_outputs/mistral_engagenet_base_config_eval.json
+    [daisee_evaluation.py|INFO|2025-01-22] Key word ACC - 0.35479679703712463
+    [daisee_evaluation.py|INFO|2025-01-22] Key word PR - 0.24729931354522705
+    [daisee_evaluation.py|INFO|2025-01-22] Key word RE - 0.2997397184371948
+    [daisee_evaluation.py|INFO|2025-01-22] Key word F1 - 0.2471315562725067
+    [daisee_evaluation.py|INFO|2025-01-22] Structure ACC - 0.1914260983467102
+    [daisee_evaluation.py|INFO|2025-01-22] Structure PR - 0.21491310000419617
+    [daisee_evaluation.py|INFO|2025-01-22] Structure RE - 0.15421393513679504
+    [daisee_evaluation.py|INFO|2025-01-22] Structure F1 - 0.16984638571739197
+
+    minigpt4video_eval_outputs/mistral_engagenet_finetune_config_eval.json
     [daisee_evaluation.py|INFO|2025-01-22] Key word ACC - 0.6407010555267334
     [daisee_evaluation.py|INFO|2025-01-22] Key word PR - 0.723282516002655
     [daisee_evaluation.py|INFO|2025-01-22] Key word RE - 0.6108910441398621
