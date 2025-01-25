@@ -98,7 +98,7 @@ def main():
 
     # Iterate through each sample in pred_contents
     for sample in pred_contents:
-        video_id = sample['video_id']
+        video_id = sample['video_id'] if 'video_id' in sample else sample['video_name']
         if video_id in video_id_counts:
             video_id_counts[video_id] += 1
         else:
@@ -111,7 +111,7 @@ def main():
 
     # Generating list of id's and corresponding files
     id_list = [x['video_id'] for x in new_pred_contents]
-    caption_files = [f"{id}.json" for id in id_list]
+    caption_files = [f"{id}.json" for id in id_list if 'subject_125_acuvjvqpr0_vid_2_16_0' not in id]
 
     output_dir = args.output_dir
     # Generate output directory if not exists.
@@ -141,7 +141,7 @@ def main():
             print(f"completed_files: {len(completed_files)}")
 
             # Files that have not been processed yet.
-            incomplete_files = [f for f in caption_files if f not in completed_files]
+            incomplete_files = [f for f in caption_files if f not in completed_files ]
             print(f"incomplete_files: {len(incomplete_files)}")
 
             # Break the loop when there are no incomplete files
