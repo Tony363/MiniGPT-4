@@ -566,6 +566,7 @@ class DaiseeBuilder(BaseDatasetBuilder):
             vis_root=build_info.vis_root,
             instruct_prompts=build_info.prompts,
             question_prompts=build_info.questions,
+            length=build_info.length
         )
 
         return datasets

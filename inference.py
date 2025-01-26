@@ -271,18 +271,20 @@ def main()->None:
         target_table[i] = mapping[subject['caption']]
         pred_table[i] = target_table[i]
 
-        img_list = []
         image_paths = glob.glob(os.path.join(
             test_dir,
             subject_sample[:6] if 'DAiSEE' in test_dir else '',
             f"{subject_sample}-*.jpg")
         )
+        
+        img_list = []
         # logger.info(f"IMAGE PATHS - {len(image_paths)}")
         for image_path in sorted(image_paths):
             image = vis_processor(Image.open(image_path).convert("RGB")).to(device='cuda:{}'.format(args.gpu_id))
-            image,_ = model.encode_img(image.unsqueeze(0))
             img_list.append(image)
-            instruct_prompt +="<img><ImageHere><\img>"# TODO add index number of frame?
+            # instruct_prompt +="<img><ImageHere><\img>"# TODO add index number of frame?
+
+        image,_ = model.encode_img(torch.stack(img_list))
 
         instruct_prompt += question + "\n### Response:\n"  
         logger.info(f"PROMPT 1:\n{instruct_prompt}")

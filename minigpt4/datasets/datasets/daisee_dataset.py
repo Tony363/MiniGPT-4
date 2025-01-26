@@ -29,9 +29,11 @@ class DaiseeDataset(BaseDataset,__DisplMixin):
         ann_paths,
         instruct_prompts=None,
         question_prompts=None,
+        length:int=10
     ):
         super().__init__(vis_processor, text_processor, vis_root, ann_paths)
-
+        
+        self.length = length
         self.instruction_pool = ""
         self.questions = self.instruction_pool = None
 
@@ -79,4 +81,5 @@ class DaiseeDataset(BaseDataset,__DisplMixin):
             "answer": ann['caption'],
             "image_id": ann['video_id'],
             "instruction_input": instruction,
+            "length": self.length
         } 
