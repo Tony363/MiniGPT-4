@@ -238,7 +238,7 @@ class BaseTask:
                     wandb.log({"epoch": inner_epoch, "loss": loss})
             metric_logger.update(loss=loss.item())
             metric_logger.update(lr=optimizer.param_groups[0]["lr"])
-        
+            break
         # after train_epoch()
         # gather the stats from all processes
         metric_logger.synchronize_between_processes()
