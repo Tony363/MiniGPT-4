@@ -141,11 +141,25 @@ def parse_args():
         --cfg-path eval_configs/minigpt4_eval.yaml 
 
     python3 inference.py \
-        --gpu-id 0 \
+        --gpu-id 1 \
         --cfg-path eval_configs/minigpt4_eval.yaml \
         --test-dir /home/tony/nvme2tb/EngageNetFrames/test \
         --test-labels /home/tony/MiniGPT-4/engagenet_captions/test_filter_cap.json \
         --out-json engagenet_base.json
+
+    python3 inference.py \
+        --gpu-id 1 \
+        --cfg-path eval_configs/minigpt4_daisee_eval.yaml \
+        --test-dir /home/tony/nvme2tb/DAiSEE_Frames/Test_frames \
+        --test-labels daisee_captions/test_filter_cap.json \
+        --out-json daisee_finetune.json
+
+    python3 inference.py \
+        --gpu-id 1 \
+        --cfg-path eval_configs/minigpt4_engagenet_eval.yaml \
+        --test-dir /home/tony/nvme2tb/EngageNetFrames/test \
+        --test-labels engagenet_captions/test_filter_cap.json \
+        --out-json engagenet_finetune.json
             
     """
     parser = argparse.ArgumentParser(description="Testing")
@@ -205,18 +219,18 @@ def load_metrics(num_classes:int)->torchmetrics.MetricCollection:
 def get_test_labels(
     label_path:str
 )->dict:
-    mapping = {
-        'The student is not-engaged':0,
-        'The student is barely-engaged':1,
-        'The student is engaged':2,
-        'The student is highly-engaged':3
-    }
     # mapping = {
     #     'The student is Not-Engaged':0,
     #     'The student is Barely-Engaged':1,
     #     'The student is Engaged':2,
     #     'The student is Highly-Engaged':3
     # }
+    mapping = {
+        'The student is not-engaged':0,
+        'The student is barely-engaged':1,
+        'The student is engaged':2,
+        'The student is highly-engaged':3
+    }
     with open(label_path,'r') as f:
         labels = json.load(f)
 
@@ -278,18 +292,21 @@ def main()->None:
         )
         
         img_list = []
-        # logger.info(f"IMAGE PATHS - {len(image_paths)}")
         for image_path in sorted(image_paths):
             image = vis_processor(Image.open(image_path).convert("RGB")).to(device='cuda:{}'.format(args.gpu_id))
             img_list.append(image)
-            # instruct_prompt +="<img><ImageHere><\img>"# TODO add index number of frame?
+        
+        images = torch.stack(img_list)
+        image,_ = model.encode_img(images)
 
-        image,_ = model.encode_img(torch.stack(img_list))
-
-        instruct_prompt += question + "\n### Response:\n"  
+        instruct_prompt += "<img><ImageHere><\img>" + question + "\n### Response:\n"  
         logger.info(f"PROMPT 1:\n{instruct_prompt}")
 
-        embs,max_new_tokens = embedding_prepare(model, instruct_prompt, img_list)
+        embs,max_new_tokens = embedding_prepare(
+            model, 
+            instruct_prompt, 
+            [image]
+        )
         inputs = generate_kwargs(embs=embs, stopping_criteria=stopping_criteria,max_new_tokens=max_new_tokens)
         pred = model_answer(model, inputs)
 
@@ -298,6 +315,7 @@ def main()->None:
         logger.info(f"OUTPUT - {pred.lower()}")
         if not check_string_in_output(pred,subject['caption'].split(' ')[-1]):#subject['caption'].split(' ')[-1].lower() not in pred.lower():
             pred_table[i] = (target_table[i] - 1) % args.classes
+        
         performance = metrics.forward(pred_table[:i + 1],target_table[:i + 1])
         logger.info(f"ACC - {performance['MulticlassAccuracy']}")
         logger.info(f"PR - {performance['MulticlassPrecision']}")
@@ -307,7 +325,11 @@ def main()->None:
         instruct_prompt = instruct_prompt.replace(question,random.choice(questions))
         logger.info(f"PROMPT 2:\n{instruct_prompt}")
 
-        embs,max_new_tokens = embedding_prepare(model, instruct_prompt, img_list)
+        embs,max_new_tokens = embedding_prepare(
+            model, 
+            instruct_prompt, 
+            [image]
+        )
         inputs = generate_kwargs(embs=embs, stopping_criteria=stopping_criteria,max_new_tokens=max_new_tokens)
         pred_q1 = model_answer(model, inputs)
         

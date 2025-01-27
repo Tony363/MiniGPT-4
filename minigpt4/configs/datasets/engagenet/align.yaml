@@ -1,7 +1,7 @@
- # Copyright (c) 2022, salesforce.com, inc.
- # All rights reserved.
- # SPDX-License-Identifier: BSD-3-Clause
- # For full license text, see the LICENSE file in the repo root or https://opensource.org/licenses/BSD-3-Clause
+# Copyright (c) 2022, salesforce.com, inc.
+# All rights reserved.
+# SPDX-License-Identifier: BSD-3-Clause
+# For full license text, see the LICENSE file in the repo root or https://opensource.org/licenses/BSD-3-Clause
 
 datasets:
   engagenet: # same as the name of the train_config yaml file
@@ -10,9 +10,11 @@ datasets:
 
     build_info: # this is the information needed to build the dataset
       # Be careful not to append minus sign (-) before split to avoid itemizing
-      ann_paths: [/mnt/nvme2tb/ieee_fer_dpo/engagenet_captions/train_val_filter_cap.json] # list of paths to annotation files
-      vis_root: /mnt/nvme2tb/ieee_fer_dpo/EngageNetFrames/train_val
-      model_name: 'pretrain_vicuna0' # Language Model Name (available: llama2, mistral)
-      storage: /mnt/nvme2tb/ieee_fer_dpo/engagenet_captions
-      prompts: /mnt/nvme2tb/ieee_fer_dpo/prompts/instruction_align.txt
-      questions: /mnt/nvme2tb/ieee_fer_dpo/prompts/daisee_questions.txt
+      ann_paths: [
+          /home/tony/nvme2tb/ieee_fer_dpo/engagenet_captions/train_val_filter_cap.json,
+        ] # list of paths to annotation files
+      vis_root: /home/tony/nvme2tb/EngageNetFrames/train_val
+      model_name: "pretrain_vicuna0" # Language Model Name (available: llama2, mistral)
+      storage: /home/tony/nvme2tb/ieee_fer_dpo/engagenet_captions
+      prompts: /home/tony/nvme2tb/ieee_fer_dpo/prompts/instruction_align.txt
+      questions: /home/tony/nvme2tb/ieee_fer_dpo/prompts/daisee_questions.txt

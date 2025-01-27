@@ -76,7 +76,10 @@ class MiniGPTBase(BaseModel):
         ]
         seg_embs = [self.embed_tokens(seg_t) for seg_t in seg_tokens]
 
+        if img_list[0].shape[0] > 1:
+            img_list = torch.split(img_list[0],1,dim=0)
         mixed_embs = [emb for pair in zip(seg_embs[:-1], img_list) for emb in pair] + [seg_embs[-1]]
+
         mixed_embs = torch.cat(mixed_embs, dim=1)
         return mixed_embs
 

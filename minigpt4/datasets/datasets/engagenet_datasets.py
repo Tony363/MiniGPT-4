@@ -67,6 +67,7 @@ class EngageNetDataset(BaseDataset,__DisplMixin):
         instruction,images = random.choice(self.instruction_pool),[]
         instruction += f"\n\n### Input:\n<img><ImageHere><\img>\n" 
 
+        # print(sorted(glob.glob(os.path.join(self.vis_root,f"{ann['video_id']}-*.jpg"))))
         for image_path in sorted(glob.glob(os.path.join(self.vis_root,f"{ann['video_id']}-*.jpg"))):
             image = self.vis_processor(Image.open(image_path).convert("RGB"))
             images.append(image)
