@@ -46,7 +46,7 @@ def init_logger(
 def parse_args():
     '''
     python3 daisee_evaluation.py --result-path /home/tony/nvme2tb/ieee_fer_dpo/minigpt4_eval_outputs/daisee_base.json --retries 5
-    python3 daisee_evaluation.py --result-path /home/tony/nvme2tb/ieee_fer_dpo/minigpt4_eval_outputs/daisee_inference.json --retries 5
+    python3 daisee_evaluation.py --result-path /home/tony/MiniGPT-4/results/daisee_inference.json --retries 5
     python3 daisee_evaluation.py --result-path /home/tony/nvme2tb/ieee_fer_dpo/minigpt4video_eval_outputs/mistral_daisee_base_config_eval.json --retries 5
     python3 daisee_evaluation.py --result-path /home/tony/nvme2tb/ieee_fer_dpo/minigpt4video_eval_outputs/mistral_daisee_test_config_eval.json --retries 5  
     
@@ -323,7 +323,7 @@ def main()->None:
 
 if __name__ == "__main__":
     """
-    minigpt4_eval_outputs/daisee_base.json
+    minigpt4_eval_outputs/daisee_base.json #TODO REDO
     [daisee_evaluation.py|INFO|2025-01-24] Key word ACC - 0.03365866467356682
     [daisee_evaluation.py|INFO|2025-01-24] Key word PR - 0.22113727033138275
     [daisee_evaluation.py|INFO|2025-01-24] Key word RE - 0.018307646736502647
@@ -334,14 +334,11 @@ if __name__ == "__main__":
     [daisee_evaluation.py|INFO|2025-01-24] Structure F1 - 0.029216088354587555
 
     minigpt4_eval_outputs/daisee_inference.json
-    [daisee_evaluation.py|INFO|2025-01-24] Key word ACC - 0.5278856158256531
-    [daisee_evaluation.py|INFO|2025-01-24] Key word PR - 0.37611472606658936
-    [daisee_evaluation.py|INFO|2025-01-24] Key word RE - 0.24560368061065674
-    [daisee_evaluation.py|INFO|2025-01-24] Key word F1 - 0.2070852369070053
-    [daisee_evaluation.py|INFO|2025-01-24] Structure ACC - 0.9130264520645142
-    [daisee_evaluation.py|INFO|2025-01-24] Structure PR - 0.5903357863426208
-    [daisee_evaluation.py|INFO|2025-01-24] Structure RE - 0.696989119052887
-    [daisee_evaluation.py|INFO|2025-01-24] Structure F1 - 0.6137951016426086
+    [inference.py|INFO|2025-01-28] FINAL ACC - 0.6791259050369263
+    [inference.py|INFO|2025-01-28] FINAL PR - 0.5235922932624817
+    [inference.py|INFO|2025-01-28] FINAL RE - 0.5938832759857178
+    [inference.py|INFO|2025-01-28] FINAL F1 - 0.5322630405426025
+
 
     minigpt4video_eval_outputs/mistral_daisee_base_config_eval.json
     [daisee_evaluation.py|INFO|2025-01-24] Key word ACC - 0.5688818097114563
@@ -354,9 +351,16 @@ if __name__ == "__main__":
     [daisee_evaluation.py|INFO|2025-01-24] Structure F1 - 0.31713855266571045
 
     minigpt4video_eval_outputs/mistral_daisee_test_config_eval.json
+    [daisee_evaluation.py|INFO|2025-01-28] Key word ACC - 0.6602604985237122                         
+    [daisee_evaluation.py|INFO|2025-01-28] Key word PR - 0.4261140823364258                          
+    [daisee_evaluation.py|INFO|2025-01-28] Key word RE - 0.3445773720741272                          
+    [daisee_evaluation.py|INFO|2025-01-28] Key word F1 - 0.3568475544452667
+    [daisee_evaluation.py|INFO|2025-01-28] Structure ACC - 0.6093818545341492
+    [daisee_evaluation.py|INFO|2025-01-28] Structure PR - 0.4895944595336914
+    [daisee_evaluation.py|INFO|2025-01-28] Structure RE - 0.6111400127410889
+    [daisee_evaluation.py|INFO|2025-01-28] Structure F1 - 0.4276164472103119
 
-
-    minigpt4_eval_outputs/engagenet_base.json
+    minigpt4_eval_outputs/engagenet_base.json #TODO REDO
     [daisee_evaluation.py|INFO|2025-01-24] Key word ACC - 0.03188373148441315
     [daisee_evaluation.py|INFO|2025-01-24] Key word PR - 0.04356253519654274
     [daisee_evaluation.py|INFO|2025-01-24] Key word RE - 0.026909854263067245
@@ -366,7 +370,7 @@ if __name__ == "__main__":
     [daisee_evaluation.py|INFO|2025-01-24] Structure RE - 0.02129654958844185
     [daisee_evaluation.py|INFO|2025-01-24] Structure F1 - 0.029087310656905174
 
-    minigpt4_eval_outputs/engagenet_finetune.json
+    minigpt4_eval_outputs/engagenet_finetune.json #TODO REDO
     [daisee_evaluation.py|INFO|2025-01-24] Key word ACC - 0.38917461037635803
     [daisee_evaluation.py|INFO|2025-01-24] Key word PR - 0.303382009267807
     [daisee_evaluation.py|INFO|2025-01-24] Key word RE - 0.33527135848999023

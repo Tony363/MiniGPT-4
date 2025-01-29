@@ -141,6 +141,19 @@ def parse_args():
         --cfg-path eval_configs/minigpt4_eval.yaml 
 
     python3 inference.py \
+        --cfg-path eval_configs/minigpt4_eval.yaml \
+        --test-dir /home/tony/nvme2tb/EngageNetFrames/test \
+        --test-labels /home/tony/MiniGPT-4/engagenet_captions/test_filter_cap.json \
+        --out-json testing.json
+
+    python3 inference.py \
+        --gpu-id 1 \
+        --cfg-path eval_configs/minigpt4_eval.yaml \
+        --test-dir /home/tony/nvme2tb/EngageNetFrames/test \
+        --test-labels /home/tony/MiniGPT-4/engagenet_captions/test_filter_cap.json \
+        --out-json engagenet_base.json
+        
+    python3 inference.py \
         --gpu-id 1 \
         --cfg-path eval_configs/minigpt4_eval.yaml \
         --test-dir /home/tony/nvme2tb/EngageNetFrames/test \
@@ -313,7 +326,7 @@ def main()->None:
         logger.info(f"SUBJECT: {subject_sample}")
         logger.info(f"CAPTION - {subject['caption'].split(' ')[-1].lower()}")
         logger.info(f"OUTPUT - {pred.lower()}")
-        if not check_string_in_output(pred,subject['caption'].split(' ')[-1]):#subject['caption'].split(' ')[-1].lower() not in pred.lower():
+        if not check_string_in_output(pred,subject['caption'].split(' ')[-1]):
             pred_table[i] = (target_table[i] - 1) % args.classes
         
         performance = metrics.forward(pred_table[:i + 1],target_table[:i + 1])
@@ -332,7 +345,7 @@ def main()->None:
         )
         inputs = generate_kwargs(embs=embs, stopping_criteria=stopping_criteria,max_new_tokens=max_new_tokens)
         pred_q1 = model_answer(model, inputs)
-        
+
         answers.append({
             "video_id": subject_sample,
             'Q': question.split('Question:')[-1],
@@ -350,6 +363,8 @@ def main()->None:
     logger.info(f"FINAL RE - {performance['MulticlassRecall']}")
     logger.info(f"FINAL F1 - {performance['MulticlassF1Score']}")
     metrics.reset()
+
+    logger.info(f"FILE SAVED TO - {os.path.join('results',args.out_json)}")
     with open(f"results/{args.out_json}", 'w') as f:
         json.dump(answers, f, indent=4)
 
