@@ -201,9 +201,9 @@ def check_string_in_output(
 def load_metrics(num_classes:int)->torchmetrics.MetricCollection:
     metrics = torchmetrics.MetricCollection([
         MulticlassAccuracy(num_classes=num_classes, average="micro"),
-        MulticlassPrecision(num_classes=num_classes, average="macro"),
-        MulticlassRecall(num_classes=num_classes, average="macro"),
-        MulticlassF1Score(num_classes=num_classes, average="macro"),
+        MulticlassPrecision(num_classes=num_classes, average="weighted"),
+        MulticlassRecall(num_classes=num_classes, average="weighted"),
+        MulticlassF1Score(num_classes=num_classes, average="weighted"),
     ])
     return metrics
 
@@ -320,6 +320,7 @@ def main()->None:
     with open(os.path.join('structured',outpath[-1]),'w') as f:
         json.dump(json_result,f,indent=4)
 
+    logger.info(f"STRUCTURE DUMPED TO - {os.path.join('structured',outpath[-1])}")
 
 if __name__ == "__main__":
     """
@@ -333,7 +334,7 @@ if __name__ == "__main__":
     [daisee_evaluation.py|INFO|2025-01-24] Structure RE - 0.028618473559617996
     [daisee_evaluation.py|INFO|2025-01-24] Structure F1 - 0.029216088354587555
 
-    minigpt4_eval_outputs/daisee_inference.json
+    minigpt4_eval_outputs/daisee_inference.json # TODO REDO
     [inference.py|INFO|2025-01-28] FINAL ACC - 0.6791259050369263
     [inference.py|INFO|2025-01-28] FINAL PR - 0.5235922932624817
     [inference.py|INFO|2025-01-28] FINAL RE - 0.5938832759857178
@@ -341,24 +342,24 @@ if __name__ == "__main__":
 
 
     minigpt4video_eval_outputs/mistral_daisee_base_config_eval.json
-    [daisee_evaluation.py|INFO|2025-01-24] Key word ACC - 0.5688818097114563
-    [daisee_evaluation.py|INFO|2025-01-24] Key word PR - 0.4028744101524353
-    [daisee_evaluation.py|INFO|2025-01-24] Key word RE - 0.28821173310279846
-    [daisee_evaluation.py|INFO|2025-01-24] Key word F1 - 0.3005830943584442
-    [daisee_evaluation.py|INFO|2025-01-24] Structure ACC - 0.4408881962299347
-    [daisee_evaluation.py|INFO|2025-01-24] Structure PR - 0.3947935104370117
-    [daisee_evaluation.py|INFO|2025-01-24] Structure RE - 0.39212799072265625
-    [daisee_evaluation.py|INFO|2025-01-24] Structure F1 - 0.31713855266571045
+    [daisee_evaluation.py|INFO|2025-01-29] Key word ACC - 0.5688818097114563
+    [daisee_evaluation.py|INFO|2025-01-29] Key word PR - 0.7374650835990906
+    [daisee_evaluation.py|INFO|2025-01-29] Key word RE - 0.5688818097114563
+    [daisee_evaluation.py|INFO|2025-01-29] Key word F1 - 0.5799382328987122
+    [daisee_evaluation.py|INFO|2025-01-29] Structure ACC - 0.4440290927886963
+    [daisee_evaluation.py|INFO|2025-01-29] Structure PR - 0.6939756870269775
+    [daisee_evaluation.py|INFO|2025-01-29] Structure RE - 0.4440290927886963
+    [daisee_evaluation.py|INFO|2025-01-29] Structure F1 - 0.5289551019668579
 
     minigpt4video_eval_outputs/mistral_daisee_test_config_eval.json
-    [daisee_evaluation.py|INFO|2025-01-28] Key word ACC - 0.6602604985237122                         
-    [daisee_evaluation.py|INFO|2025-01-28] Key word PR - 0.4261140823364258                          
-    [daisee_evaluation.py|INFO|2025-01-28] Key word RE - 0.3445773720741272                          
-    [daisee_evaluation.py|INFO|2025-01-28] Key word F1 - 0.3568475544452667
-    [daisee_evaluation.py|INFO|2025-01-28] Structure ACC - 0.6093818545341492
-    [daisee_evaluation.py|INFO|2025-01-28] Structure PR - 0.4895944595336914
-    [daisee_evaluation.py|INFO|2025-01-28] Structure RE - 0.6111400127410889
-    [daisee_evaluation.py|INFO|2025-01-28] Structure F1 - 0.4276164472103119
+    [daisee_evaluation.py|INFO|2025-01-29] Key word ACC - 0.6602604985237122
+    [daisee_evaluation.py|INFO|2025-01-29] Key word PR - 0.7764840126037598
+    [daisee_evaluation.py|INFO|2025-01-29] Key word RE - 0.6602604985237122
+    [daisee_evaluation.py|INFO|2025-01-29] Key word F1 - 0.6716954708099365
+    [daisee_evaluation.py|INFO|2025-01-29] Structure ACC - 0.613019585609436
+    [daisee_evaluation.py|INFO|2025-01-29] Structure PR - 0.8687856197357178
+    [daisee_evaluation.py|INFO|2025-01-29] Structure RE - 0.613019585609436
+    [daisee_evaluation.py|INFO|2025-01-29] Structure F1 - 0.6899137496948242
 
     minigpt4_eval_outputs/engagenet_base.json #TODO REDO
     [daisee_evaluation.py|INFO|2025-01-24] Key word ACC - 0.03188373148441315
@@ -381,24 +382,24 @@ if __name__ == "__main__":
     [daisee_evaluation.py|INFO|2025-01-24] Structure F1 - 0.21532279253005981
 
     minigpt4video_eval_outputs/mistral_engagenet_base_config_eval.json
-    [daisee_evaluation.py|INFO|2025-01-24] Key word ACC - 0.35479679703712463
-    [daisee_evaluation.py|INFO|2025-01-24] Key word PR - 0.24729931354522705
-    [daisee_evaluation.py|INFO|2025-01-24] Key word RE - 0.2997397184371948
-    [daisee_evaluation.py|INFO|2025-01-24] Key word F1 - 0.2471315562725067
-    [daisee_evaluation.py|INFO|2025-01-24] Structure ACC - 0.5129430294036865
-    [daisee_evaluation.py|INFO|2025-01-24] Structure PR - 0.4749894142150879
-    [daisee_evaluation.py|INFO|2025-01-24] Structure RE - 0.4634208679199219
-    [daisee_evaluation.py|INFO|2025-01-24] Structure F1 - 0.44980400800704956
+    [daisee_evaluation.py|INFO|2025-01-29] Key word ACC - 0.35479679703712463
+    [daisee_evaluation.py|INFO|2025-01-29] Key word PR - 0.3258094787597656
+    [daisee_evaluation.py|INFO|2025-01-29] Key word RE - 0.35479676723480225
+    [daisee_evaluation.py|INFO|2025-01-29] Key word F1 - 0.3110787272453308
+    [daisee_evaluation.py|INFO|2025-01-29] Structure ACC - 0.5039498209953308
+    [daisee_evaluation.py|INFO|2025-01-29] Structure PR - 0.5797727108001709
+    [daisee_evaluation.py|INFO|2025-01-29] Structure RE - 0.5039498805999756
+    [daisee_evaluation.py|INFO|2025-01-29] Structure F1 - 0.5311106443405151
 
     minigpt4video_eval_outputs/mistral_engagenet_finetune_config_eval.json
-    [daisee_evaluation.py|INFO|2025-01-24] Key word ACC - 0.6407010555267334
-    [daisee_evaluation.py|INFO|2025-01-24] Key word PR - 0.723282516002655
-    [daisee_evaluation.py|INFO|2025-01-24] Key word RE - 0.6108910441398621
-    [daisee_evaluation.py|INFO|2025-01-24] Key word F1 - 0.5911238789558411
-    [daisee_evaluation.py|INFO|2025-01-24] Structure ACC - 0.6754897832870483
-    [daisee_evaluation.py|INFO|2025-01-24] Structure PR - 0.6039474606513977
-    [daisee_evaluation.py|INFO|2025-01-24] Structure RE - 0.6162317991256714
-    [daisee_evaluation.py|INFO|2025-01-24] Structure F1 - 0.5889008045196533
+    [daisee_evaluation.py|INFO|2025-01-29] Key word ACC - 0.6407010555267334
+    [daisee_evaluation.py|INFO|2025-01-29] Key word PR - 0.722614049911499
+    [daisee_evaluation.py|INFO|2025-01-29] Key word RE - 0.6407010555267334
+    [daisee_evaluation.py|INFO|2025-01-29] Key word F1 - 0.6263036727905273
+    [daisee_evaluation.py|INFO|2025-01-29] Structure ACC - 0.671959638595581
+    [daisee_evaluation.py|INFO|2025-01-29] Structure PR - 0.7301850318908691
+    [daisee_evaluation.py|INFO|2025-01-29] Structure RE - 0.671959638595581
+    [daisee_evaluation.py|INFO|2025-01-29] Structure F1 - 0.6908557415008545
 
     """
     program = os.path.basename(__file__)

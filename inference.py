@@ -222,9 +222,9 @@ def parse_args():
 def load_metrics(num_classes:int)->torchmetrics.MetricCollection:
     metrics = torchmetrics.MetricCollection([
         MulticlassAccuracy(num_classes=num_classes, average="micro"),
-        MulticlassPrecision(num_classes=num_classes, average="macro"),
-        MulticlassRecall(num_classes=num_classes, average="macro"),
-        MulticlassF1Score(num_classes=num_classes, average="macro"),
+        MulticlassPrecision(num_classes=num_classes, average="weighted"),
+        MulticlassRecall(num_classes=num_classes, average="weighted"),
+        MulticlassF1Score(num_classes=num_classes, average="weighted"),
     ])
     return metrics
 
