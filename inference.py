@@ -355,7 +355,8 @@ def main()->None:
             'pred2':pred_q1,
             'A': subject['caption'],
         })
-
+        with open(f"results/{args.out_json}", 'w') as f:
+            json.dump(answers, f, indent=4)
 
     performance = metrics.compute()
     logger.info(f"FINAL ACC - {performance['MulticlassAccuracy']}")
