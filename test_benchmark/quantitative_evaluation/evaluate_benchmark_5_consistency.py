@@ -125,8 +125,8 @@ def main():
         question1 = sample['Q1']
         question2 = sample['Q1']
         answer = sample['A']
-        pred1 = sample['pred1']
-        pred2 = sample['pred2']
+        pred1 = sample['pred']
+        pred2 = sample['pred1']
         qa_set = {"q1": question1, "q2": question2, "a": answer, "pred1": pred1, "pred2": pred2}
         prediction_set[id] = qa_set
 

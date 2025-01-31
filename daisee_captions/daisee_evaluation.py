@@ -11,6 +11,7 @@ import torch
 import torchmetrics
 from torchmetrics.classification import MulticlassAccuracy, MulticlassPrecision, MulticlassRecall,MulticlassF1Score
 
+from sentence_transformers import SentenceTransformer, util
 
 
 def init_logger(
@@ -107,7 +108,16 @@ def extract_json(content: str) -> str:
     # Return the entire content if no braces found (may cause JSONDecodeError)
     return content
 
-
+def sentence_eval(
+    classes:tuple, 
+    model:torch.nn.Module, 
+    ref:str, 
+    answer:str
+)->bool:
+    query_embedding = model.encode(answer)
+    passage_embedding = model.encode([c for c in classes])
+    score = util.cos_sim(query_embedding, passage_embedding)[0]
+    return max(score)==score[int(ref)]
 
 def openai_parser(
     sentence:str,
@@ -214,49 +224,57 @@ def get_acc(
     classes:int=4,
     video:bool=False
 )->dict:
-    mapping = {
-        'The student is Not-Engaged':0,
-        'The student is Barely-Engaged':1,
-        'The student is Engaged':2,
-        'The student is Highly-Engaged':3
-    }
     # mapping = {
-    #     'The student is not-engaged':0,
-    #     'The student is barely-engaged':1,
-    #     'The student is engaged':2,
-    #     'The student is highly-engaged':3
+    #     'The student is Not-Engaged':0,
+    #     'The student is Barely-Engaged':1,
+    #     'The student is Engaged':2,
+    #     'The student is Highly-Engaged':3
     # }
+    mapping = {
+        'The student is not-engaged':0,
+        'The student is barely-engaged':1,
+        'The student is engaged':2,
+        'The student is highly-engaged':3
+    }
     metrics_keyword = load_metrics(classes)
     metrics_struc = load_metrics(classes)
+    metrics_dist = load_metrics(classes)
 
     inference_samples = len(results)
     logger.info(f"INFERENCE SAMPLES - {inference_samples}")
 
     pred_keyword,target_keyword = torch.zeros(inference_samples),torch.zeros(inference_samples)
     pred_struc,target_struc = torch.zeros(inference_samples),torch.zeros(inference_samples)
+    pred_dist,target_dist = torch.zeros(inference_samples),torch.zeros(inference_samples)
 
     json_results = {}
     id_key = 'video_name' if video else 'video_id'
 
+    eval_model = SentenceTransformer("BAAI/bge-m3")
+    eval_model.eval()
+
     for i,sample in enumerate(results):
         answer,pred = sample['A'],sample['pred']
         pred = pred[0] if video else pred
-        target_keyword[i] = mapping[answer]
-        pred_keyword[i] = target_keyword[i]
+        target_keyword[i] = target_struc[i] = target_dist[i] = mapping[answer] 
 
+        pred_keyword[i] = target_keyword[i]
         if not check_string_in_output(pred,answer.split(' ')[-1]):
             pred_keyword[i] = (target_keyword[i] - 1) % classes   
             logger.info(f"WRONG pred {sample[id_key]}")
         metrics_keyword.forward(pred_keyword[:i + 1],target_keyword[:i + 1])
 
+        pred_dist[i] = target_dist[i]
+        if not sentence_eval(mapping.keys(), eval_model,target_dist[i],pred):
+            pred_dist[i] = (target_dist[i] - 1) % classes
+        metrics_dist.forward(pred_dist[:i + 1],target_dist[:i + 1]) 
+
         parsed_json = openai_parser(pred,retries=retries)
         logger.info("Parsed JSON:")
         logger.info(json.dumps(parsed_json, indent=4))
         logger.info(f'\nA:{answer.split(" ")[-1]}\nP:{parsed_json["pred"]}')
-        
-        target_struc[i] = mapping[answer]
+
         pred_struc[i] = target_struc[i]
-        
         if isinstance(parsed_json['pred'],list) or\
             isinstance(parsed_json['pred'],dict) or\
              parsed_json['pred'].lower() not in answer.split(' ')[-1].lower():
@@ -279,6 +297,12 @@ def get_acc(
     logger.info(f"Structure RE - {performance['MulticlassRecall']}")
     logger.info(f"Structure F1 - {performance['MulticlassF1Score']}")
     metrics_struc.reset()   
+
+    performance = metrics_dist.compute()
+    logger.info(f"Dist ACC - {performance['MulticlassAccuracy']}")
+    logger.info(f"Dist PR - {performance['MulticlassPrecision']}")
+    logger.info(f"Dist RE - {performance['MulticlassRecall']}")
+    logger.info(f"Dist F1 - {performance['MulticlassF1Score']}")
     return json_results
 
 
@@ -372,14 +396,10 @@ if __name__ == "__main__":
     [daisee_evaluation.py|INFO|2025-01-24] Structure F1 - 0.029087310656905174
 
     minigpt4_eval_outputs/engagenet_finetune.json #TODO REDO
-    [daisee_evaluation.py|INFO|2025-01-24] Key word ACC - 0.38917461037635803
-    [daisee_evaluation.py|INFO|2025-01-24] Key word PR - 0.303382009267807
-    [daisee_evaluation.py|INFO|2025-01-24] Key word RE - 0.33527135848999023
-    [daisee_evaluation.py|INFO|2025-01-24] Key word F1 - 0.2853012681007385
-    [daisee_evaluation.py|INFO|2025-01-24] Structure ACC - 0.27623289823532104
-    [daisee_evaluation.py|INFO|2025-01-24] Structure PR - 0.24811212718486786
-    [daisee_evaluation.py|INFO|2025-01-24] Structure RE - 0.21550515294075012
-    [daisee_evaluation.py|INFO|2025-01-24] Structure F1 - 0.21532279253005981
+    [inference.py|INFO|2025-01-31] FINAL ACC - 0.6791259050369263                                        
+    [inference.py|INFO|2025-01-31] FINAL PR - 0.6882764101028442                                         
+    [inference.py|INFO|2025-01-31] FINAL RE - 0.6791259050369263                                         
+    [inference.py|INFO|2025-01-31] FINAL F1 - 0.6495401859283447                                         
 
     minigpt4video_eval_outputs/mistral_engagenet_base_config_eval.json
     [daisee_evaluation.py|INFO|2025-01-29] Key word ACC - 0.35479679703712463
