@@ -147,11 +147,11 @@ def parse_args():
         --out-json testing.json
 
     python3 inference.py \
-        --gpu-id 1 \
+        --gpu-id 0 \
         --cfg-path eval_configs/minigpt4_eval.yaml \
-        --test-dir /home/tony/nvme2tb/EngageNetFrames/test \
-        --test-labels /home/tony/MiniGPT-4/engagenet_captions/test_filter_cap.json \
-        --out-json engagenet_base.json
+        --test-dir /home/tony/nvme2tb/DAiSEE_Frames/Test_frames \
+        --test-labels /home/tony/MiniGPT-4/daisee_captions/test_filter_cap.json \
+        --out-json daisee_base.json
         
     python3 inference.py \
         --gpu-id 1 \
@@ -161,14 +161,14 @@ def parse_args():
         --out-json engagenet_base.json
 
     python3 inference.py \
-        --gpu-id 1 \
+        --gpu-id 0 \
         --cfg-path eval_configs/minigpt4_daisee_eval.yaml \
         --test-dir /home/tony/nvme2tb/DAiSEE_Frames/Test_frames \
         --test-labels daisee_captions/test_filter_cap.json \
         --out-json daisee_finetune.json
 
     python3 inference.py \
-        --gpu-id 1 \
+        --gpu-id 1\
         --cfg-path eval_configs/minigpt4_engagenet_eval.yaml \
         --test-dir /home/tony/nvme2tb/EngageNetFrames/test \
         --test-labels engagenet_captions/test_filter_cap.json \
@@ -232,18 +232,18 @@ def load_metrics(num_classes:int)->torchmetrics.MetricCollection:
 def get_test_labels(
     label_path:str
 )->dict:
-    # mapping = {
-    #     'The student is Not-Engaged':0,
-    #     'The student is Barely-Engaged':1,
-    #     'The student is Engaged':2,
-    #     'The student is Highly-Engaged':3
-    # }
     mapping = {
-        'The student is not-engaged':0,
-        'The student is barely-engaged':1,
-        'The student is engaged':2,
-        'The student is highly-engaged':3
+        'The student is Not-Engaged':0,
+        'The student is Barely-Engaged':1,
+        'The student is Engaged':2,
+        'The student is Highly-Engaged':3
     }
+    # mapping = {
+    #     'The student is not-engaged':0,
+    #     'The student is barely-engaged':1,
+    #     'The student is engaged':2,
+    #     'The student is highly-engaged':3
+    # }
     with open(label_path,'r') as f:
         labels = json.load(f)
 
@@ -355,6 +355,7 @@ def main()->None:
             'pred2':pred_q1,
             'A': subject['caption'],
         })
+        logger.info(f"FILE SAVED TO - {os.path.join('results',args.out_json)}")
         with open(f"results/{args.out_json}", 'w') as f:
             json.dump(answers, f, indent=4)
 

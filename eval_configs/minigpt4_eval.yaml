@@ -5,7 +5,7 @@ model:
   end_sym: ""
   low_resource: True
   prompt_template: "###Human: {} ###Assistant: "
-  ckpt: "/mnt/nvme2tb/prerained_minigpt4_7b_vicuna.pth"
+  ckpt: /home/tony/nvme2tb/ieee_fer_dpo/prerained_minigpt4_7b_vicuna.pth
   # ckpt: minigpt4/output/minigpt4_stage2_daisee_trainval/20250104130/checkpoint_39.pth
   # ckpt: minigpt4/output/minigpt4_stage2_engagenet_finetune/20250116234/checkpoint_39.pth
 

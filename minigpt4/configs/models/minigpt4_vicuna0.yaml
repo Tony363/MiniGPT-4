@@ -16,7 +16,7 @@ model:
   prompt: ""
 
   llama_model: "wangrongsheng/MiniGPT-4-LLaMA-7B"
-  device: "cpu" # TODO CHANGE HERE TONY CHANGED
+  # device: "cpu" # TODO CHANGE HERE TONY CHANGED
 
 preprocess:
   vis_processor:
