@@ -166,7 +166,7 @@ def main():
         id = sample['video_id'] if 'video_id' in sample else sample['video_name']
         question = sample['Q']
         answer = sample['A']
-        pred = sample['pred1'] if best_of_two[id] else sample['pred']
+        pred = sample['pred']#sample['pred1'] if best_of_two["_".join(id.split("_")[:-1])] else sample['pred']
         qa_set = {"q": question, "a": answer, "pred": pred}
         prediction_set[id] = qa_set
 

@@ -6,6 +6,7 @@ import logging
 import argparse
 import openai
 from openai import OpenAI
+from tqdm import tqdm
 
 import torch
 import torchmetrics
@@ -47,7 +48,7 @@ def init_logger(
 def parse_args():
     '''
     python3 daisee_evaluation.py --result-path /home/tony/nvme2tb/ieee_fer_dpo/minigpt4_eval_outputs/daisee_base.json --retries 5
-    python3 daisee_evaluation.py --result-path /home/tony/MiniGPT-4/results/daisee_inference.json --retries 5
+    python3 daisee_evaluation.py --result-path /home/tony/MiniGPT-4/results/daisee_finetune.json --retries 5
     python3 daisee_evaluation.py --result-path /home/tony/nvme2tb/ieee_fer_dpo/minigpt4video_eval_outputs/mistral_daisee_base_config_eval.json --retries 5
     python3 daisee_evaluation.py --result-path /home/tony/nvme2tb/ieee_fer_dpo/minigpt4video_eval_outputs/mistral_daisee_test_config_eval.json --retries 5  
     
@@ -242,28 +243,28 @@ def get_acc(
     # }
     metrics_keyword = load_metrics(classes)
     metrics_struc = load_metrics(classes)
-    # metrics_dist = load_metrics(classes)
+    metrics_dist = load_metrics(classes)
 
     inference_samples = len(results)
     logger.info(f"INFERENCE SAMPLES - {inference_samples}")
 
     pred_keyword,target_keyword = torch.zeros(inference_samples),torch.zeros(inference_samples)
     pred_struc,target_struc = torch.zeros(inference_samples),torch.zeros(inference_samples)
-    # pred_dist,target_dist = torch.zeros(inference_samples),torch.zeros(inference_samples)
+    pred_dist,target_dist = torch.zeros(inference_samples),torch.zeros(inference_samples)
     best_of_two = {}
     json_results = {}
     id_key = 'video_name' if video else 'video_id'
 
-    # eval_model = SentenceTransformer("BAAI/bge-m3")
-    # eval_model.eval()
+    eval_model = SentenceTransformer("BAAI/bge-m3")
+    eval_model.eval()
     '''
     if not check_string_in_output(pred[0],subject['caption'].split(' ')[-1]):
             if not check_string_in_output(pred1[0],subject['caption'].split(' ')[-1]):
     '''
-    for i,sample in enumerate(results):
+    for i,sample in enumerate(tqdm(results)):
         answer,pred = sample['A'],sample['pred'] if isinstance(sample['pred'], str) else sample['pred'][0]
         pred1 = sample['pred1'] if isinstance(sample['pred1'], str) else sample['pred1'][0]
-        target_keyword[i] = target_struc[i] = mapping[answer] # target_dist[i] target_struc[i] =
+        target_keyword[i] = target_struc[i] = target_dist[i] = mapping[answer] # target_struc[i] =
 
         pred_keyword[i] = target_keyword[i]
         if not check_string_in_output(pred,answer.split(' ')[-1]) and not check_string_in_output(pred1,answer.split(' ')[-1]) :
@@ -272,32 +273,29 @@ def get_acc(
         metrics_keyword.forward(pred_keyword[:i + 1],target_keyword[:i + 1])
         best_of_two[sample[id_key]] = int(check_string_in_output(pred1,answer.split(' ')[-1])) 
 
-        # pred_dist[i] = target_dist[i]
-        # if not sentence_eval(mapping.keys(), eval_model,target_dist[i],pred):
-        #     pred_dist[i] = (target_dist[i] - 1) % classes
-        # metrics_dist.forward(pred_dist[:i + 1],target_dist[:i + 1]) 
+        pred_dist[i] = target_dist[i]
+        if not sentence_eval(mapping.keys(), eval_model,target_dist[i],pred):
+            pred_dist[i] = (target_dist[i] - 1) % classes
+        metrics_dist.forward(pred_dist[:i + 1],target_dist[:i + 1]) 
 
         parsed_0 = openai_parser(pred,retries=retries)
-        parsed_1 = openai_parser(pred1,retries=retries)
 
         logger.info("Parsed JSON:")
         logger.info(json.dumps(parsed_0, indent=4))
-        logger.info(json.dumps(parsed_1, indent=4))
 
-        logger.info(f'\nA:{answer.split(" ")[-1]}\nP:{parsed_0["pred"]}\nP1:{parsed_1["pred"]}')
+        logger.info(f'\nA:{answer.split(" ")[-1]}\nP:{parsed_0["pred"]}\n')
 
         pred_struc[i] = target_struc[i]
-        if isinstance(parsed_0['pred'],list) and isinstance(parsed_1['pred'],list)  or\
-             isinstance(parsed_0['pred'],dict) and isinstance(parsed_1['pred'],dict) or\
-             parsed_0['pred'].lower() not in answer.split(' ')[-1].lower() and\
-             parsed_1['pred'].lower() not in answer.split(' ')[-1].lower():
+
+
+        if isinstance(parsed_0['pred'],list) or isinstance(parsed_0['pred'],dict) or\
+            parsed_0['pred'].lower() != answer.split(' ')[-1].lower():
             pred_struc[i] = (target_struc[i] - 1) % classes
 
         metrics_struc.forward(pred_struc[:i + 1],target_struc[:i + 1])   
 
         json_results[sample[id_key]] = (
             parsed_0['pred'],
-            parsed_1['pred'],
             answer.split(' ')[-1],
         )
         
@@ -316,11 +314,11 @@ def get_acc(
     logger.info(f"Structure F1 - {performance['MulticlassF1Score']}")
     metrics_struc.reset()   
 
-    # performance = metrics_dist.compute()
-    # logger.info(f"Dist ACC - {performance['MulticlassAccuracy']}")
-    # logger.info(f"Dist PR - {performance['MulticlassPrecision']}")
-    # logger.info(f"Dist RE - {performance['MulticlassRecall']}")
-    # logger.info(f"Dist F1 - {performance['MulticlassF1Score']}")
+    performance = metrics_dist.compute()
+    logger.info(f"Dist ACC - {performance['MulticlassAccuracy']}")
+    logger.info(f"Dist PR - {performance['MulticlassPrecision']}")
+    logger.info(f"Dist RE - {performance['MulticlassRecall']}")
+    logger.info(f"Dist F1 - {performance['MulticlassF1Score']}")
     return json_results,best_of_two
 
 
