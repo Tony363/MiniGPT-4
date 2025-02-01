@@ -157,13 +157,16 @@ def main():
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
+    with open(f'/home/tony/MiniGPT-4/daisee_captions/best_of_two/{args.pred_path.split("/")[-1]}','r') as f:
+        best_of_two = json.load(f)
+
     # Preparing dictionary of question-answer sets
     prediction_set = {}
     for sample in new_pred_contents:
         id = sample['video_id'] if 'video_id' in sample else sample['video_name']
         question = sample['Q']
         answer = sample['A']
-        pred = sample['pred']
+        pred = sample['pred1'] if best_of_two[id] else sample['pred']
         qa_set = {"q": question, "a": answer, "pred": pred}
         prediction_set[id] = qa_set
 
